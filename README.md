@@ -505,6 +505,26 @@ pytest tests/ -v -s
 
 ---
 
+## Project structure
+
+```
+autogrouper/
+├── autogrouper/
+│   ├── __init__.py
+│   └── grouper.py
+├── docs/
+│   ├── algorithm.png
+│   └── algorithm.svg
+├── tests/
+│   └── test_grouper.py
+├── CONTRIBUTORS
+├── LICENSE
+├── README.md
+└── pyproject.toml
+```
+
+---
+
 ## Contributing
 
 Contributions are welcome. If you find a bug, have a feature request, or want to improve the documentation, open an issue or a pull request on GitHub. Please include a minimal reproducible example when reporting a bug.
