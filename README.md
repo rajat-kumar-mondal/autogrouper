@@ -500,7 +500,7 @@ MIT 2026
 
 ---
 
-Built with love 💙 & overthinking.
+Built with 💙 & overthinking.
 
 Inspired by intuition and simplicity.
 
