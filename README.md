@@ -510,17 +510,17 @@ pytest tests/ -v -s
 ```
 autogrouper/
 ├── autogrouper/
-│   ├── __init__.py
-│   └── grouper.py
+│   ├── __init__.py        # Package entry point and version
+│   └── grouper.py         # Core algorithm and AutoPrefixGrouper class
 ├── docs/
-│   ├── algorithm.png
-│   └── algorithm.svg
+│   ├── algorithm.png      # Algorithm diagram (embedded in README)
+│   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
-│   └── test_grouper.py
-├── CONTRIBUTORS
-├── LICENSE
-├── README.md
-└── pyproject.toml
+│   └── test_grouper.py    # 287 test cases
+├── CONTRIBUTORS           # Author and contribution record
+├── LICENSE                # MIT license
+├── README.md              # Full documentation
+└── pyproject.toml         # Build configuration and metadata
 ```
 
 ---
