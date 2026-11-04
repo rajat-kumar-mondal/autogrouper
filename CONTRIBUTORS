@@ -1,8 +1,8 @@
 Authors: Rajat Kumar Mondal, Claude Sonnet 4.6 (Anthropic)
 
 Contributions
-R.K.M: Research & Conceptualization, Algorithm design & all architectural decisions, Core code implementation, Test suite (initial set and all edge cases), Documentation & Editing, Formal Analysis.
-C.S 4.6. (A): Code review & edge case identification, Docstring writing and refinement, Test suite expansion (from initial set to 287 cases), Documentation structuring and writing.
+R.K.M: Research & conceptualization, Algorithm design & all architectural decisions, Core code implementation, Test suite (initial set and all edge cases), Documentation & editing, Review & formal analysis.
+C.S 4.6. (A): Code review & edge case identification, Docstring writing and refinement, Test suite expansion (from initial set to 287 cases), Documentation structuring & writing.
 
 Created: 2026-11-04
 Last updated: 2026-11-04
