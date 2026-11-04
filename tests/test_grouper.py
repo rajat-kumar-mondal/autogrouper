@@ -2,6 +2,11 @@
 Tests for AutoPrefixGrouper class.
 287 test cases covering the core algorithm, recursive grouping,
 prefix_depth, inspect_prefix, preview_fit, and export.
+
+Author: Rajat Kumar Mondal
+
+Created: 2026-11-04
+Last updated: 2026-11-04
 """
 
 import pytest

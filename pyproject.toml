@@ -9,7 +9,7 @@ description = "Automatic prefix-based grouping of string collections — no deli
 readme = "README.md"
 license = "MIT"
 authors = [
-    { name = "autogrouper contributors" },
+    { name = "Rajat Kumar Mondal" },
 ]
 keywords = [
     "prefix",
