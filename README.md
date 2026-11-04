@@ -402,7 +402,7 @@ If you received the list from a third-party API, a collaborator, or a legacy sys
 
 The algorithm works in two stages: sort, then scan.
 
-![Algorithm diagram](docs/algorithm.png)
+![Algorithm diagram](https://raw.githubusercontent.com/rajat-kumar-mondal/autogrouper/main/docs/algorithm.png)
 
 **Stage 1: sort**
 
