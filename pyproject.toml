@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "autogrouper"
-version = "0.2.1"
+version = "0.2.2"
 description = "Automatic prefix-based grouping of string collections. No delimiter, no schema, no external dependencies."
 readme = "README.md"
 license = "MIT"

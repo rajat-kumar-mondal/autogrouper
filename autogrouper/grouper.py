@@ -837,10 +837,10 @@ class AutoPrefixGrouper:
         else:
             indices = list(position_index)
 
-        # Step 1: re-bucket each string under its trimmed prefix
-        # We operate per-string so each string picks its own delimiter.
+        # Step 1: re-bucket each string under its trimmed prefix.
+        # Track which original raw prefixes contributed to each new bucket.
         merged: dict[str, list[str]] = {}
-        origin_count: dict[str, int] = {}
+        origin_raw_prefixes: dict[str, set] = {}  # new_prefix -> set of raw prefixes
 
         for prefix, members in groups.items():
             # Determine a new prefix for each member string individually
@@ -853,7 +853,7 @@ class AutoPrefixGrouper:
                     per_string[s] = prefix
                 else:
                     delim, idx = cut_info
-                    per_string[s] = AutoPrefixGrouper._trim_prefix(prefix, delim, idx)
+                    per_string[s] = AutoPrefixGrouper._trim_prefix(s, delim, idx)
 
             # Group strings by their new prefix
             new_prefix_to_strings: dict[str, list[str]] = {}
@@ -862,12 +862,17 @@ class AutoPrefixGrouper:
 
             for np, strs in new_prefix_to_strings.items():
                 merged.setdefault(np, []).extend(strs)
-                origin_count[np] = origin_count.get(np, 0) + 1
+                origin_raw_prefixes.setdefault(np, set()).add(prefix)
 
-        # Step 2: for keys that absorbed multiple original groups, re-split
+        # Step 2: for keys that absorbed strings from multiple *different* raw
+        # prefixes, re-split to recover sub-groups (e.g. GO_ and RO_ both
+        # trimmed to the same /obo/ prefix).
+        # Do NOT re-split when strings from the same raw prefix were all
+        # trimmed to the same new key. That is intentional delimiter grouping.
         result: dict[str, list[str]] = {}
         for new_prefix, members in merged.items():
-            if origin_count[new_prefix] > 1 and len(members) > 1:
+            n_origins = len(origin_raw_prefixes[new_prefix])
+            if n_origins > 1 and len(members) > 1:
                 sorted_members = sorted(
                     members, key=lambda x: (x[0] if x else "", len(x))
                 )
