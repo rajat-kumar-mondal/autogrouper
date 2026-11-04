@@ -1,4 +1,18 @@
 """
+Contributors
+------------
+Rajat Kumar Mondal
+    Algorithm design and all architectural decisions
+    Core implementation
+    Test suite (initial set and all edge cases)
+    Documentation
+
+Claude Sonnet 4.6 (Anthropic)
+    Code review and edge case identification
+    Docstring writing and refinement
+    Test suite expansion (from initial set to 287 cases)
+    Documentation structuring and writing
+
 autogrouper.grouper
 ~~~~~~~~~~~~~~~~~~~
 
