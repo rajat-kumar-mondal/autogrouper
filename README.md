@@ -179,6 +179,42 @@ AutoPrefixGrouper().fit(strings, prefix_depth="/", position_index=4).get_groups(
 
 Both groups were originally trimmed to `http://purl.obolibrary.org/obo/` but the algorithm detected that they could be split further and did so automatically.
 
+### Multiple delimiters
+
+`prefix_depth` and `position_index` both accept a list when your data contains strings that use different delimiters.
+
+```python
+mixed = [
+    "http://www.w3.org/2002/07/owl#Class",
+    "http://www.w3.org/2002/07/owl#ObjectProperty",
+    "http://purl.obolibrary.org/obo/GO_0001234",
+    "http://purl.obolibrary.org/obo/GO_0005678",
+]
+
+g.fit(mixed, prefix_depth=["#", "/"], position_index=[-1, 5])
+```
+
+Delimiters are tried in the order you supply. For each string, the first delimiter found in that string wins. The string is cut once at the paired `position_index`. If none of the delimiters appear in a string, the raw algorithm prefix is kept.
+
+The first string contains `#`, so it is cut at the last `#`. The third string contains no `#`, so `/` is tried next and it is cut at the fifth `/`.
+
+**Single index for all delimiters**
+
+If every delimiter should use the same `position_index`, pass a single int:
+
+```python
+g.fit(mixed, prefix_depth=["#", "/"], position_index=-1)
+```
+
+**Per-delimiter indices**
+
+When each delimiter needs a different cut point, pass a list of the same length as `prefix_depth`:
+
+```python
+g.fit(data, prefix_depth=["#", "/", "@"], position_index=[4, 5, 1])
+# "#" cuts at 4th occurrence, "/" at 5th, "@" at 1st
+```
+
 ---
 
 ## Recursive grouping
@@ -382,7 +418,7 @@ If you received the list from a third-party API, a collaborator, or a legacy sys
 
 | Method | Requires fit | Description |
 |---|---|---|
-| `fit(strings, prefix_depth, position_index)` | No | Discover groups. Returns `self`. |
+| `fit(strings, prefix_depth, position_index)` | No | Discover groups. `prefix_depth` and `position_index` each accept a single value or a list. Returns `self`. |
 | `get_groups()` | Yes | `dict[str, list[str]]` of all groups. |
 | `get_groups_recursive(mode, singletons)` | Yes | Groups at every depth level. |
 | `get_prefix_for(string)` | Yes | Prefix key for a string, or `None`. |
@@ -391,7 +427,7 @@ If you received the list from a third-party API, a collaborator, or a legacy sys
 | `summary()` | Yes | `dict[str, int]` count per prefix. |
 | `export(format)` | Yes | Serialise to `json`, `csv`, `tsv`, or `markdown`. |
 | `inspect_prefix(string, delimiter)` | No | Print `position_index=N` values for a delimiter. |
-| `preview_fit(strings, prefix_depth, position_index)` | No | Dry run without changing state. |
+| `preview_fit(strings, prefix_depth, position_index)` | No | Dry run without changing state. `prefix_depth` and `position_index` accept a list. |
 | `len(g)` | Yes | Number of groups. |
 | `prefix in g` | Yes | Check if a prefix key exists. |
 | `for prefix, members in g` | Yes | Iterate over groups. |
