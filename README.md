@@ -356,7 +356,7 @@ An empty list raises `ValueError`. Duplicate strings are preserved.
 `autogrouper` is useful whenever you have a flat list of strings that carry hidden structure in their prefixes and you want to surface that structure without writing custom parsing code.
 
 **Semantic web and ontologies:**
-A SPARQL query returns a flat list of URIs like `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`, `http://www.w3.org/2002/07/owl#Class`, `http://purl.obolibrary.org/obo/GO_0001234`, and `http://purl.obolibrary.org/obo/RO_0000001` all in the same column. `autogrouper` groups them by namespace without a hardcoded prefix list.
+A SPARQL query returns a flat list of URIs like `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`, `http://www.w3.org/2002/07/owl#Class`, `http://purl.obolibrary.org/obo/GO_0001234`, and `http://purl.obolibrary.org/obo/RO_0000001` all in the same column. The same situation arises with structured web URLs such as `https://www.alliancegenome.org/disease/DOID:9976`, `https://www.alliancegenome.org/disease/DOID:999`, and `https://www.alliancegenome.org/disease/DOID:9993`. `autogrouper` groups both kinds by their shared prefix without a hardcoded prefix list.
 
 **Bioinformatics identifiers:**
 Accession numbers, gene IDs, protein IDs, and pathway identifiers from multiple databases land in the same column. `autogrouper` separates them by their natural prefix pattern (`ENSG`, `hsa-mir`, `UniRef50_`, `IPR`) without you knowing those patterns in advance.
