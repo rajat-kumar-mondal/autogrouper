@@ -481,7 +481,24 @@ All output from the model was reviewed manually before inclusion. Every test cas
 git clone https://github.com/rajat-kumar-mondal/autogrouper
 cd autogrouper
 pip install -e ".[dev]"
-pytest
+```
+
+Run all tests:
+
+```bash
+pytest tests/
+```
+
+Run with detailed output per test:
+
+```bash
+pytest tests/ -v
+```
+
+Run with full output including print statements:
+
+```bash
+pytest tests/ -v -s
 ```
 
 287 test cases cover the core algorithm, recursive grouping, prefix depth control, inspect, preview, and all four export formats.
