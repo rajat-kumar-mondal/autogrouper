@@ -436,21 +436,6 @@ pytest
 
 ---
 
-## Citation
-
-If you use this package in academic work, please cite:
-
-```bibtex
-@article{autogrouper2026,
-  title   = {autogrouper: Automatic Prefix-Based Grouping of String Collections},
-  journal = {Journal of Open Source Software},
-  year    = {2026},
-  note    = {Submitted}
-}
-```
-
----
-
 ## Contributing
 
 Contributions are welcome. If you find a bug, have a feature request, or want to improve the documentation, open an issue or a pull request on GitHub. Please include a minimal reproducible example when reporting a bug.
