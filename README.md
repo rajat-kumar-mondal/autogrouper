@@ -503,7 +503,7 @@ No trie, hash table, or suffix array is required. Zero imports. Runs on CPython 
 
 This package was built by Rajat Kumar Mondal. The core algorithm, its design, and all architectural decisions are original.
 
-Claude Sonnet 4.6 by Anthropic was used during development. Specifically, it assisted with code review and edge case identification, writing and refining docstrings, generating and expanding the test suite from an initial set to 287 cases, and structuring and writing this documentation.
+Claude Sonnet 4.6 by Anthropic was used during development. Specifically, it assisted with code review and edge case identification, writing and refining docstrings, generating and expanding the test suite from an initial set to 301 cases, and structuring and writing this documentation.
 
 The model was accessed through the Claude.ai interface. No other AI tools, code generation assistants, or large language models were used at any stage.
 
@@ -537,7 +537,7 @@ Run with full output including print statements:
 pytest tests/ -v -s
 ```
 
-287 test cases cover the core algorithm, recursive grouping, prefix depth control, inspect, preview, and all four export formats.
+301 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), inspect, preview, and all four export formats.
 
 ---
 
@@ -552,7 +552,7 @@ autogrouper/
 │   ├── algorithm.png      # Algorithm diagram (embedded in README)
 │   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
-│   └── test_grouper.py    # 287 test cases
+│   └── test_grouper.py    # 301 test cases
 ├── CONTRIBUTORS           # Author and contribution record
 ├── LICENSE                # MIT license
 ├── README.md              # Full documentation
