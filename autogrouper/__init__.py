@@ -1,0 +1,24 @@
+"""
+autogrouper
+~~~~~~~~~~~
+
+Automatic prefix-based grouping of string collections.
+Zero dependencies. Pure Python 3.6+.
+
+Basic usage::
+
+    from autogrouper import AutoPrefixGrouper
+
+    g = AutoPrefixGrouper()
+    g.fit(["rdf:type", "rdf:label", "owl:Class", "owl:ObjectProperty"])
+    print(g.get_groups())
+    # {'owl:': ['owl:Class', 'owl:ObjectProperty'], 'rdf:': ['rdf:label', 'rdf:type']}
+
+"""
+
+from .grouper import AutoPrefixGrouper
+
+__version__ = "0.1.0"
+__license__ = "MIT"
+
+__all__ = ["AutoPrefixGrouper"]

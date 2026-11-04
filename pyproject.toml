@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autogrouper"
+version = "0.1.0"
+description = "Automatic prefix-based grouping of string collections — no delimiter, no schema, no external dependencies."
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "autogrouper contributors" },
+]
+keywords = [
+    "prefix",
+    "grouping",
+    "clustering",
+    "string",
+    "rdf",
+    "ontology",
+    "semantic-web",
+    "bioinformatics",
+    "namespace",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Linguistic",
+]
+requires-python = ">=3.6"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/rajat-kumar-mondal/autogrouper"
+Documentation = "https://github.com/rajat-kumar-mondal/autogrouper#readme"
+Repository = "https://github.com/rajat-kumar-mondal/autogrouper"
+"Bug Tracker" = "https://github.com/rajat-kumar-mondal/autogrouper/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "build>=1.0",
+    "twine>=4.0",
+]
+benchmark = [
+    "matplotlib>=3.5",
+    "pandas>=1.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["autogrouper*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["autogrouper"]
+omit = ["tests/*", "benchmarks/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 90
