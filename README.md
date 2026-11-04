@@ -464,6 +464,9 @@ MIT 2026
 ---
 
 Built with love ☕ & overthinking.
+
 Inspired by intuition and simplicity.
+
 Drinking Boss Black Coffee and Itoen Oi Tea while building.
+
 Beautified and documented with Claude.
