@@ -13,6 +13,11 @@ No external dependencies. Pure Python 3.6+.
 
 Changes
 -------
+0.2.4
+    ``get_groups()`` gains a ``count`` parameter.
+    When ``True``, returns ``dict[str, int]`` with member count per group.
+    Cannot be combined with ``strip_prefix=True``.
+
 0.2.3
     ``get_groups()`` gains a ``strip_prefix`` parameter.
     When ``True``, each member string has the group key removed from its
@@ -290,7 +295,9 @@ class AutoPrefixGrouper:
         self._n_strings = len(strings)
         return self
 
-    def get_groups(self, strip_prefix: bool = False) -> dict[str, list[str]]:
+    def get_groups(self,
+                   strip_prefix: bool = False,
+                   count: bool = False) -> "dict[str, list[str]] | dict[str, int]":
         """Return the discovered prefix groups.
 
         Parameters
@@ -299,18 +306,26 @@ class AutoPrefixGrouper:
             When ``True``, each member string has the group key removed
             from its start, returning only the suffix portion.
             Default ``False`` returns full strings.
+        count : bool, optional
+            When ``True``, returns the number of members per group instead
+            of the member list. Default ``False``.
+            Cannot be combined with ``strip_prefix=True``.
 
         Returns
         -------
         dict[str, list[str]]
             Keys are discovered prefixes. Values are lists of strings
             that share that prefix (or their suffixes when
-            ``strip_prefix=True``).
+            ``strip_prefix=True``). Returned when ``count=False``.
+        dict[str, int]
+            Count of members per prefix. Returned when ``count=True``.
 
         Raises
         ------
         RuntimeError
             If called before :meth:`fit`.
+        ValueError
+            If both ``strip_prefix`` and ``count`` are ``True``.
 
         Examples
         --------
@@ -319,15 +334,23 @@ class AutoPrefixGrouper:
         {'os.': ['os.getcwd', 'os.path'], 'sys.argv': ['sys.argv']}
         >>> g.get_groups(strip_prefix=True)
         {'os.': ['getcwd', 'path'], 'sys.argv': ['']}
+        >>> g.get_groups(count=True)
+        {'os.': 2, 'sys.argv': 1}
         """
         self._check_fitted()
-        if not strip_prefix:
-            return dict(self._groups)
-        result: dict[str, list[str]] = {}
-        for prefix, members in self._groups.items():
-            plen = len(prefix)
-            result[prefix] = [s[plen:] if s.startswith(prefix) else s for s in members]
-        return result
+        if strip_prefix and count:
+            raise ValueError(
+                "strip_prefix and count cannot both be True. Choose one."
+            )
+        if count:
+            return {prefix: len(members) for prefix, members in self._groups.items()}
+        if strip_prefix:
+            result: dict[str, list[str]] = {}
+            for prefix, members in self._groups.items():
+                plen = len(prefix)
+                result[prefix] = [s[plen:] if s.startswith(prefix) else s for s in members]
+            return result
+        return dict(self._groups)
 
     def get_groups_recursive(self,
                               mode: str = "flat",

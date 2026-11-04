@@ -1,8 +1,8 @@
 """
 Tests for AutoPrefixGrouper class.
-309 test cases covering the core algorithm, recursive grouping,
+315 test cases covering the core algorithm, recursive grouping,
 prefix_depth (single and list), position_index (single and list),
-strip_prefix, inspect_prefix, preview_fit, and export.
+strip_prefix, count, inspect_prefix, preview_fit, and export.
 
 Author: Rajat Kumar Mondal
 
@@ -2506,3 +2506,52 @@ def test_SP008_strip_prefix_singleton_group():
     owl_key = next(k for k in r if "owl" in k)
     # singleton: full string minus the prefix key
     assert len(r[owl_key]) == 1
+
+# ── GROUP 43: count parameter ─────────────────────────────────────────────────
+
+COUNT_STRINGS = [
+    "http://glycosmos.org/disease/DOID:0001816",
+    "http://glycosmos.org/disease/DOID:0002116",
+    "http://glycosmos.org/disease/DOID:0014667",
+    "http://jcggdb.jp/rdf/diseases/ggdonto#CON0000",
+    "http://jcggdb.jp/rdf/diseases/ggdonto#CON0001",
+]
+
+def test_CN001_count_true_returns_int_values():
+    g = AutoPrefixGrouper().fit(COUNT_STRINGS, prefix_depth=["#", "/"], position_index=-1)
+    r = g.get_groups(count=True)
+    assert all(isinstance(v, int) for v in r.values())
+
+
+def test_CN002_count_values_match_group_sizes():
+    g = AutoPrefixGrouper().fit(COUNT_STRINGS, prefix_depth=["#", "/"], position_index=-1)
+    r_full = g.get_groups()
+    r_count = g.get_groups(count=True)
+    assert all(r_count[k] == len(r_full[k]) for k in r_full)
+
+
+def test_CN003_count_total_equals_input_length():
+    g = AutoPrefixGrouper().fit(COUNT_STRINGS, prefix_depth=["#", "/"], position_index=-1)
+    r = g.get_groups(count=True)
+    assert sum(r.values()) == len(COUNT_STRINGS)
+
+
+def test_CN004_count_false_is_default():
+    g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label"])
+    r_default = g.get_groups()
+    r_explicit = g.get_groups(count=False)
+    assert r_default == r_explicit
+
+
+def test_CN005_count_and_strip_prefix_both_true_raises():
+    g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label"])
+    try:
+        g.get_groups(count=True, strip_prefix=True)
+        assert False, "Expected ValueError"
+    except ValueError:
+        pass
+
+
+def test_CN006_count_keys_match_get_groups_keys():
+    g = AutoPrefixGrouper().fit(COUNT_STRINGS, prefix_depth=["#", "/"], position_index=-1)
+    assert set(g.get_groups(count=True).keys()) == set(g.get_groups().keys())
