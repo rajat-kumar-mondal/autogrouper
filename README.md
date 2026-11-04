@@ -413,7 +413,7 @@ No trie, hash table, or suffix array is required. Zero imports. Runs on CPython 
 
 ## AI usage disclosure 🤖
 
-This package was built by a human. The core algorithm, its design, and all architectural decisions are original.
+This package was built by Rajat Kumar Mondal. The core algorithm, its design, and all architectural decisions are original.
 
 Claude Sonnet 4.6 by Anthropic was used during development. Specifically, it assisted with code review and edge case identification, writing and refining docstrings, generating and expanding the test suite from an initial set to 287 cases, and structuring and writing this documentation.
 
@@ -451,13 +451,19 @@ If you use this package in academic work, please cite:
 
 ---
 
+## Contributing
+
+Contributions are welcome. If you find a bug, have a feature request, or want to improve the documentation, open an issue or a pull request on GitHub. Please include a minimal reproducible example when reporting a bug.
+
+---
+
 ## License
 
 MIT 2026
 
 ---
 
-Built with love & overthinking ☕🍵
+Built with love ☕ & overthinking.
 Inspired by intuition and simplicity.
-Drinking Boss Black Coffee and Ito En Matcha while building.
+Drinking Boss Black Coffee and Itoen Oi Tea while building.
 Beautified and documented with Claude.
