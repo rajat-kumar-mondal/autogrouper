@@ -355,25 +355,25 @@ An empty list raises `ValueError`. Duplicate strings are preserved.
 
 `autogrouper` is useful whenever you have a flat list of strings that carry hidden structure in their prefixes and you want to surface that structure without writing custom parsing code.
 
-**Semantic web and ontologies**
+**Semantic web and ontologies:**
 You are working with RDF triples, OWL classes, or ontology term IDs from databases like GO, CHEBI, or SIO. The terms arrive as a flat list from a SPARQL query. `autogrouper` groups them by namespace instantly, with no hardcoded prefix list.
 
-**Bioinformatics identifiers**
+**Bioinformatics identifiers:**
 Accession numbers, gene IDs, protein IDs, and pathway identifiers from multiple databases land in the same column. `autogrouper` separates them by their natural prefix pattern (`ENSG`, `hsa-mir`, `UniRef50_`, `IPR`) without you knowing those patterns in advance.
 
-**Log analysis**
+**Log analysis:**
 Cloud service logs, S3 keys, or application log lines share structural prefixes like `prod/api/`, `prod/db/`, `staging/api/`. `autogrouper` groups them so you can analyse each subsystem separately.
 
-**API and schema exploration**
+**API and schema exploration:**
 You receive a JSON response or a database schema you have never seen before. Field names like `user_id`, `user_name`, `order_id`, `order_total` carry their own grouping. `autogrouper` surfaces it in one line.
 
-**File system analysis**
+**File system analysis:**
 A list of file paths from an unfamiliar directory tree. `autogrouper` groups them by shared path prefix so you can see the structure before you decide what to do with the files.
 
-**Configuration and environment variables**
+**Configuration and environment variables:**
 Environment variables like `DB_HOST`, `DB_PORT`, `DB_NAME`, `REDIS_HOST`, `REDIS_PORT` are easier to audit and validate when grouped by their natural prefix.
 
-**Any flat list you did not design**
+**Any flat list you did not design:**
 If you received the list from a third-party API, a collaborator, or a legacy system and want to understand its structure quickly, `autogrouper` is the first tool to reach for.
 
 ---
@@ -400,12 +400,54 @@ If you received the list from a third-party API, a collaborator, or a legacy sys
 
 ## Algorithm
 
-Input strings are sorted by `(first_char, length)`. This keeps strings from the same namespace together and places the shortest string at the front of each block.
+The algorithm works in two stages: sort, then scan.
 
-The algorithm scans consecutive pairs. For each pair, it extracts the longest common character-level prefix. All remaining strings that begin with that prefix are collected in one forward pass. The scan then advances to the next unconsumed string and repeats.
+**Stage 1: sort**
 
-Time complexity: O(N squared x L), where N is the number of strings and L is average string length.
-Space complexity: O(N x L).
+The input list is sorted by this key:
+
+```python
+key = lambda x: (x[0] if x else "", len(x))
+```
+
+The first character groups strings from the same namespace together. The length criterion places the shortest string at the front of each block. This matters because the prefix extracted from a pair is bounded above by the shorter string.
+
+For example, given `["rdf:type", "owl:Class", "rdf:label", "owl:ObjectProperty"]`, the sorted order is:
+
+```
+owl:Class             (first char 'o', length 9)
+owl:ObjectProperty    (first char 'o', length 18)
+rdf:label             (first char 'r', length 9)
+rdf:type              (first char 'r', length 8)  <-- length tie goes later
+```
+
+**Stage 2: scan**
+
+The algorithm maintains a pointer at position `i`. At each step:
+
+1. Take the string at position `i` and the string at position `i + 1`.
+2. Find the longest common character-level prefix of this pair.
+3. Walk forward from `i + 2`, collecting every string that starts with that prefix.
+4. All collected strings, including the original pair, form one group under that prefix.
+5. Advance `i` to the first string not consumed in step 3. Repeat.
+
+Consider `["owl:Class", "owl:ObjectProperty", "rdf:label", "rdf:type"]`:
+
+- Pair 0 and 1: `"owl:Class"` and `"owl:ObjectProperty"` share `"owl:"`. Both are collected. Pointer advances to index 2.
+- Pair 2 and 3: `"rdf:label"` and `"rdf:type"` share `"rdf:"`. Both are collected. Pointer advances to index 4.
+- End of list. Result: `{"owl:": [...], "rdf:": [...]}`.
+
+A string with no matching neighbour forms its own group, with itself as both the key and the sole member.
+
+**Why consecutive pairs?**
+
+After sorting, strings from the same namespace land in adjacent positions. The longest shared prefix of any two strings in a namespace is fully captured by looking at the shortest string in that block against its immediate neighbour. No global comparison is needed.
+
+**Complexity**
+
+Time: O(N squared x L), where N is the number of strings and L is average string length. Each string is compared against its neighbour, and the prefix check is linear in L.
+
+Space: O(N x L) for storing the result.
 
 No trie, hash table, or suffix array is required. Zero imports. Runs on CPython 3.6+.
 
