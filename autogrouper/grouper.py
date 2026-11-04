@@ -1,14 +1,8 @@
 """
-Contributors
-------------
 Author: Rajat Kumar Mondal
-
-Contributions
-R.K.M: Research & conceptualization, Algorithm design & all architectural decisions, Core code implementation, Test suite (initial set and all edge cases), Documentation & editing, Review & formal analysis.
 
 Created: 2026-11-04
 Last updated: 2026-11-04
-------------
 
 autogrouper.grouper
 ~~~~~~~~~~~~~~~~~~~
