@@ -1,6 +1,9 @@
 """
 Contributors
 ------------
+Created: 2026-11-04
+Last updated: 2026-11-04
+
 Rajat Kumar Mondal
     Algorithm design and all architectural decisions
     Core implementation
