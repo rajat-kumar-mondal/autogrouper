@@ -402,6 +402,8 @@ If you received the list from a third-party API, a collaborator, or a legacy sys
 
 The algorithm works in two stages: sort, then scan.
 
+![Algorithm diagram](docs/algorithm.png)
+
 **Stage 1: sort**
 
 The input list is sorted by this key:

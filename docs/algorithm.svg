@@ -1,0 +1,118 @@
+<svg width="680" viewBox="0 0 680 620" xmlns="http://www.w3.org/2000/svg" font-family="monospace, sans-serif">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<rect width="680" height="620" fill="white"/>
+
+<!-- Stage 1 heading -->
+<text x="40" y="34" font-size="14" font-weight="600" fill="#111" font-family="sans-serif">Stage 1: sort</text>
+<text x="40" y="52" font-size="12" fill="#555" font-family="sans-serif">key = (first_char, length)</text>
+
+<text x="130" y="74" font-size="12" fill="#555" text-anchor="middle" font-family="sans-serif">input (any order)</text>
+<text x="420" y="74" font-size="12" fill="#555" text-anchor="middle" font-family="sans-serif">sorted</text>
+
+<!-- Input boxes -->
+<rect x="40" y="82" width="180" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="52" y="102" font-size="13" fill="#2c2c2a" font-family="monospace">"hasSomething"</text>
+
+<rect x="40" y="118" width="180" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="52" y="138" font-size="13" fill="#2c2c2a" font-family="monospace">"hasProteinBinding"</text>
+
+<rect x="40" y="154" width="180" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="52" y="174" font-size="13" fill="#2c2c2a" font-family="monospace">"hasX"</text>
+
+<rect x="40" y="190" width="180" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="52" y="210" font-size="13" fill="#2c2c2a" font-family="monospace">"hasY"</text>
+
+<rect x="40" y="226" width="180" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="52" y="246" font-size="13" fill="#2c2c2a" font-family="monospace">"xyzCoord"</text>
+
+<rect x="40" y="262" width="180" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="52" y="282" font-size="13" fill="#2c2c2a" font-family="monospace">"xyzValue"</text>
+
+<rect x="40" y="298" width="180" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="52" y="318" font-size="13" fill="#2c2c2a" font-family="monospace">"abc"</text>
+
+<!-- sort arrow -->
+<line x1="228" y1="200" x2="264" y2="200" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="246" y="192" font-size="12" fill="#555" text-anchor="middle" font-family="sans-serif">sort</text>
+
+<!-- Sorted: abc (gray) -->
+<rect x="270" y="82" width="196" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="282" y="102" font-size="13" fill="#2c2c2a" font-family="monospace">"abc"</text>
+<text x="474" y="102" font-size="12" fill="#555" font-family="sans-serif">('a', 3)</text>
+
+<!-- Sorted: has group (purple) -->
+<rect x="270" y="118" width="196" height="30" rx="4" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+<text x="282" y="138" font-size="13" fill="#26215c" font-family="monospace">"hasX"</text>
+<text x="474" y="138" font-size="12" fill="#555" font-family="sans-serif">('h', 4)</text>
+
+<rect x="270" y="154" width="196" height="30" rx="4" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+<text x="282" y="174" font-size="13" fill="#26215c" font-family="monospace">"hasY"</text>
+<text x="474" y="174" font-size="12" fill="#555" font-family="sans-serif">('h', 4)</text>
+
+<rect x="270" y="190" width="196" height="30" rx="4" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+<text x="282" y="210" font-size="13" fill="#26215c" font-family="monospace">"hasSomething"</text>
+<text x="474" y="210" font-size="12" fill="#555" font-family="sans-serif">('h', 12)</text>
+
+<rect x="270" y="226" width="196" height="30" rx="4" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+<text x="282" y="246" font-size="13" fill="#26215c" font-family="monospace">"hasProteinBinding"</text>
+<text x="474" y="246" font-size="12" fill="#555" font-family="sans-serif">('h', 17)</text>
+
+<!-- Sorted: xyz group (teal) -->
+<rect x="270" y="262" width="196" height="30" rx="4" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+<text x="282" y="282" font-size="13" fill="#04342c" font-family="monospace">"xyzCoord"</text>
+<text x="474" y="282" font-size="12" fill="#555" font-family="sans-serif">('x', 8)</text>
+
+<rect x="270" y="298" width="196" height="30" rx="4" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+<text x="282" y="318" font-size="13" fill="#04342c" font-family="monospace">"xyzValue"</text>
+<text x="474" y="318" font-size="12" fill="#555" font-family="sans-serif">('x', 8)</text>
+
+<!-- Divider -->
+<line x1="40" y1="346" x2="640" y2="346" stroke="#ccc" stroke-width="0.5"/>
+
+<!-- Stage 2 heading -->
+<text x="40" y="374" font-size="14" font-weight="600" fill="#111" font-family="sans-serif">Stage 2: scan</text>
+
+<!-- i=0 singleton abc -->
+<text x="20" y="410" font-size="12" fill="#888" font-family="sans-serif">i=0</text>
+<rect x="52" y="393" width="96" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="64" y="413" font-size="13" fill="#2c2c2a" font-family="monospace">"abc"</text>
+<text x="156" y="413" font-size="12" fill="#888" font-family="sans-serif">  no match</text>
+<line x1="234" y1="408" x2="258" y2="408" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="264" y="393" width="96" height="30" rx="4" fill="#f1efe8" stroke="#888" stroke-width="0.5"/>
+<text x="312" y="413" font-size="12" fill="#2c2c2a" text-anchor="middle" font-family="monospace">"abc"</text>
+<text x="366" y="413" font-size="12" fill="#888" font-family="sans-serif">  singleton</text>
+
+<!-- i=1 has group -->
+<text x="20" y="455" font-size="12" fill="#888" font-family="sans-serif">i=1</text>
+<rect x="52" y="438" width="196" height="30" rx="4" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+<text x="64" y="458" font-size="13" fill="#26215c" font-family="monospace">"hasX"  "hasY"  ...</text>
+<text x="88" y="484" font-size="12" fill="#534ab7" text-anchor="middle" font-family="sans-serif">lcp = "has"</text>
+<line x1="256" y1="453" x2="276" y2="453" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="282" y="438" width="52" height="30" rx="4" fill="#eeedfe" stroke="#534ab7" stroke-width="1"/>
+<text x="308" y="458" font-size="13" fill="#26215c" text-anchor="middle" font-weight="600" font-family="monospace">"has"</text>
+<line x1="342" y1="453" x2="362" y2="453" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="368" y="428" width="184" height="68" rx="6" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+<text x="460" y="448" font-size="12" fill="#26215c" text-anchor="middle" font-family="monospace">"hasX"</text>
+<text x="460" y="464" font-size="12" fill="#26215c" text-anchor="middle" font-family="monospace">"hasY"</text>
+<text x="460" y="480" font-size="12" fill="#26215c" text-anchor="middle" font-family="monospace">"hasSomething" ...</text>
+
+<!-- i=5 xyz group -->
+<text x="20" y="526" font-size="12" fill="#888" font-family="sans-serif">i=5</text>
+<rect x="52" y="509" width="196" height="30" rx="4" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+<text x="64" y="529" font-size="13" fill="#04342c" font-family="monospace">"xyzCoord"  "xyzValue"</text>
+<text x="88" y="555" font-size="12" fill="#0f6e56" text-anchor="middle" font-family="sans-serif">lcp = "xyz"</text>
+<line x1="256" y1="524" x2="276" y2="524" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="282" y="509" width="52" height="30" rx="4" fill="#e1f5ee" stroke="#0f6e56" stroke-width="1"/>
+<text x="308" y="529" font-size="13" fill="#04342c" text-anchor="middle" font-weight="600" font-family="monospace">"xyz"</text>
+<line x1="342" y1="524" x2="362" y2="524" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="368" y="509" width="184" height="30" rx="6" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+<text x="460" y="529" font-size="12" fill="#04342c" text-anchor="middle" font-family="monospace">"xyzCoord"  "xyzValue"</text>
+
+<!-- footnote -->
+<text x="340" y="600" font-size="12" fill="#888" text-anchor="middle" font-family="sans-serif">lcp = longest common prefix</text>
+</svg>
