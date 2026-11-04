@@ -412,13 +412,16 @@ key = lambda x: (x[0] if x else "", len(x))
 
 The first character groups strings from the same namespace together. The length criterion places the shortest string at the front of each block. This matters because the prefix extracted from a pair is bounded above by the shorter string.
 
-For example, given `["rdf:type", "owl:Class", "rdf:label", "owl:ObjectProperty"]`, the sorted order is:
+For example, given `["hasSomething", "hasProteinBinding", "hasX", "hasY", "xyzCoord", "xyzValue", "abc"]`, the sorted order is:
 
 ```
-owl:Class             (first char 'o', length 9)
-owl:ObjectProperty    (first char 'o', length 18)
-rdf:label             (first char 'r', length 9)
-rdf:type              (first char 'r', length 8)  <-- length tie goes later
+abc               (first char 'a', length 3)
+hasX              (first char 'h', length 4)
+hasY              (first char 'h', length 4)
+hasSomething      (first char 'h', length 12)
+hasProteinBinding (first char 'h', length 17)
+xyzCoord          (first char 'x', length 8)
+xyzValue          (first char 'x', length 8)
 ```
 
 **Stage 2: scan**
@@ -431,11 +434,16 @@ The algorithm maintains a pointer at position `i`. At each step:
 4. All collected strings, including the original pair, form one group under that prefix.
 5. Advance `i` to the first string not consumed in step 3. Repeat.
 
-Consider `["owl:Class", "owl:ObjectProperty", "rdf:label", "rdf:type"]`:
+Consider `["hasSomething", "hasProteinBinding", "hasX", "hasY", "xyzCoord", "xyzValue", "abc"]`.
 
-- Pair 0 and 1: `"owl:Class"` and `"owl:ObjectProperty"` share `"owl:"`. Both are collected. Pointer advances to index 2.
-- Pair 2 and 3: `"rdf:label"` and `"rdf:type"` share `"rdf:"`. Both are collected. Pointer advances to index 4.
-- End of list. Result: `{"owl:": [...], "rdf:": [...]}`.
+After sorting the list becomes `["abc", "hasX", "hasY", "hasSomething", "hasProteinBinding", "xyzCoord", "xyzValue"]`.
+
+The scan then proceeds:
+
+- `"abc"` has no neighbour sharing a prefix with it. It becomes a singleton group. Pointer advances to index 1.
+- Pair 1 and 2: `"hasX"` and `"hasY"` share `"has"`. The scan walks forward and finds `"hasSomething"` and `"hasProteinBinding"` also start with `"has"`. All four are collected. Pointer advances to index 5.
+- Pair 5 and 6: `"xyzCoord"` and `"xyzValue"` share `"xyz"`. Both collected. Pointer advances to index 7.
+- End of list. Result: `{"abc": [...], "has": [...], "xyz": [...]}`.
 
 A string with no matching neighbour forms its own group, with itself as both the key and the sole member.
 
