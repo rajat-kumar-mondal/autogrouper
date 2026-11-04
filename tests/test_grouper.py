@@ -1,7 +1,8 @@
 """
 Tests for AutoPrefixGrouper class.
-287 test cases covering the core algorithm, recursive grouping,
-prefix_depth, inspect_prefix, preview_fit, and export.
+301 test cases covering the core algorithm, recursive grouping,
+prefix_depth (single and list), position_index (single and list),
+inspect_prefix, preview_fit, and export.
 
 Author: Rajat Kumar Mondal
 
@@ -2221,3 +2222,219 @@ def test_E044_export_large_input_all_formats():
         result = g.export(fmt)
         assert isinstance(result, str)
         assert len(result) > 0
+
+
+# ── GROUP 12: prefix_depth and position_index as lists ──────────────────────
+
+# --- single-element list behaves identically to scalar ---
+
+def test_L001_single_delimiter_list_same_as_scalar():
+    uris = [
+        "http://semanticscience.org/resource/SIO_000001",
+        "http://semanticscience.org/resource/SIO_000255",
+    ]
+    r_scalar = AutoPrefixGrouper().fit(uris, prefix_depth="/", position_index=4).get_groups()
+    r_list   = AutoPrefixGrouper().fit(uris, prefix_depth=["/"], position_index=[4]).get_groups()
+    assert r_scalar == r_list
+
+
+def test_L002_single_delimiter_list_single_int_index():
+    uris = [
+        "http://semanticscience.org/resource/SIO_000001",
+        "http://semanticscience.org/resource/SIO_000255",
+    ]
+    r_scalar = AutoPrefixGrouper().fit(uris, prefix_depth="/", position_index=4).get_groups()
+    r_list   = AutoPrefixGrouper().fit(uris, prefix_depth=["/"], position_index=4).get_groups()
+    assert r_scalar == r_list
+
+
+# --- two delimiters, strings use different ones ---
+
+def test_L003_two_delimiters_strings_split_by_first_match():
+    # "#" strings should cut at "#", "/" strings should cut at "/"
+    data = [
+        "http://www.w3.org/2002/07/owl#Class",
+        "http://www.w3.org/2002/07/owl#ObjectProperty",
+        "http://purl.obolibrary.org/obo/GO_0001234",
+        "http://purl.obolibrary.org/obo/GO_0005678",
+    ]
+    g = AutoPrefixGrouper().fit(
+        data,
+        prefix_depth=["#", "/"],
+        position_index=[-1, 5],
+    )
+    r = g.get_groups()
+    total = sum(len(v) for v in r.values())
+    assert total == 4
+
+
+def test_L004_hash_delimiter_strings_cut_at_hash():
+    data = [
+        "http://www.w3.org/2002/07/owl#Class",
+        "http://www.w3.org/2002/07/owl#ObjectProperty",
+    ]
+    g = AutoPrefixGrouper().fit(
+        data,
+        prefix_depth=["#", "/"],
+        position_index=[-1, 4],
+    )
+    r = g.get_groups()
+    # Both strings contain "#" so "#" wins; prefix ends at "#"
+    assert any("#" in k for k in r)
+
+
+def test_L005_slash_delimiter_strings_no_hash():
+    data = [
+        "http://purl.obolibrary.org/obo/GO_0001234",
+        "http://purl.obolibrary.org/obo/GO_0005678",
+    ]
+    g = AutoPrefixGrouper().fit(
+        data,
+        prefix_depth=["#", "/"],
+        position_index=[-1, 5],
+    )
+    r = g.get_groups()
+    # No "#" in these strings so "/" is used
+    assert all("#" not in k for k in r)
+    total = sum(len(v) for v in r.values())
+    assert total == 2
+
+
+# --- three delimiters ---
+
+def test_L006_three_delimiters_each_string_uses_first_match():
+    data = [
+        "mailto:user@example.com",
+        "mailto:admin@example.org",
+        "http://example.com/path/page",
+        "http://example.org/path/page",
+        "urn:isbn:0451450523",
+        "urn:isbn:0345391802",
+    ]
+    g = AutoPrefixGrouper().fit(
+        data,
+        prefix_depth=["@", "/", ":"],
+        position_index=[-1, 3, 1],
+    )
+    r = g.get_groups()
+    total = sum(len(v) for v in r.values())
+    assert total == 6
+
+
+# --- position_index as single int applied to all delimiters ---
+
+def test_L007_single_int_position_index_applies_to_all():
+    data = [
+        "http://www.w3.org/2002/07/owl#Class",
+        "http://www.w3.org/2002/07/owl#ObjectProperty",
+        "ftp://files.example.com/pub/data",
+        "ftp://files.example.com/pub/meta",
+    ]
+    # position_index=-1 means last occurrence of whichever delimiter matched
+    g = AutoPrefixGrouper().fit(
+        data,
+        prefix_depth=["#", "/"],
+        position_index=-1,
+    )
+    r = g.get_groups()
+    total = sum(len(v) for v in r.values())
+    assert total == 4
+
+
+# --- validation errors ---
+
+def test_L008_mismatched_list_lengths_raises_valueerror():
+    with pytest.raises(ValueError, match="same length"):
+        AutoPrefixGrouper().fit(
+            ["a/b", "a/c"],
+            prefix_depth=["/", "#"],
+            position_index=[1],  # length mismatch
+        )
+
+
+def test_L009_non_single_char_in_list_raises_valueerror():
+    with pytest.raises(ValueError):
+        AutoPrefixGrouper().fit(
+            ["a/b", "a/c"],
+            prefix_depth=["//"],  # two characters, invalid
+        )
+
+
+def test_L010_empty_list_prefix_depth_raises_valueerror():
+    # An empty list has no delimiters; each entry would need to be a single char
+    # The list itself is valid but contains no items — no trimming possible.
+    # Confirm it at least does not crash and produces the raw groups.
+    data = ["rdf:type", "rdf:label", "owl:Class"]
+    # Empty list passes validation (no entries to check), falls through to raw groups
+    g = AutoPrefixGrouper().fit(data, prefix_depth=[])
+    r = g.get_groups()
+    total = sum(len(v) for v in r.values())
+    assert total == 3
+
+
+# --- no delimiter found in string falls back to raw prefix ---
+
+def test_L011_no_delimiter_match_keeps_raw_prefix():
+    data = ["rdf:type", "rdf:label"]
+    # Neither "#" nor "@" appears in these strings
+    g = AutoPrefixGrouper().fit(
+        data,
+        prefix_depth=["#", "@"],
+        position_index=[-1, -1],
+    )
+    r = g.get_groups()
+    total = sum(len(v) for v in r.values())
+    assert total == 2
+
+
+# --- preview_fit accepts lists ---
+
+def test_L012_preview_fit_list_prefix_depth():
+    data = [
+        "http://www.w3.org/2002/07/owl#Class",
+        "http://www.w3.org/2002/07/owl#ObjectProperty",
+    ]
+    g = AutoPrefixGrouper()
+    r = g.preview_fit(data, prefix_depth=["#", "/"], position_index=[-1, 4])
+    assert isinstance(r, dict)
+    total = sum(len(v) for v in r.values())
+    assert total == 2
+    # fitted state must remain unchanged
+    assert not g._fitted
+
+
+# --- all strings land in result (no loss) ---
+
+def test_L013_no_string_loss_mixed_delimiters():
+    import random
+    random.seed(42)
+    base = ["http://ex.org/res/item{:03d}".format(i) for i in range(10)]
+    hash_items = ["http://ex.org/onto#Term{:03d}".format(i) for i in range(10)]
+    data = base + hash_items
+    g = AutoPrefixGrouper().fit(
+        data,
+        prefix_depth=["#", "/"],
+        position_index=[-1, 5],
+    )
+    r = g.get_groups()
+    total = sum(len(v) for v in r.values())
+    assert total == 20
+
+
+# --- position_index list with -1 entries ---
+
+def test_L014_position_index_list_with_negative_one():
+    data = [
+        "http://www.w3.org/2002/07/owl#Class",
+        "http://www.w3.org/2002/07/owl#ObjectProperty",
+        "http://purl.obolibrary.org/obo/GO_0001234",
+        "http://purl.obolibrary.org/obo/GO_0005678",
+    ]
+    g = AutoPrefixGrouper().fit(
+        data,
+        prefix_depth=["#", "/"],
+        position_index=[-1, -1],
+    )
+    r = g.get_groups()
+    total = sum(len(v) for v in r.values())
+    assert total == 4

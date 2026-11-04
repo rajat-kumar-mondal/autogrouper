@@ -11,6 +11,15 @@ AutoPrefixGrouper: automatic prefix-based grouping of string collections.
 
 No external dependencies. Pure Python 3.6+.
 
+Changes
+-------
+0.2.0
+    ``prefix_depth`` and ``position_index`` now accept lists.
+    When both are lists they must have the same length.
+    For each string, delimiters are tried in order; the first one found
+    wins and the string is cut once at the paired ``position_index``.
+    A single ``position_index`` int applies to every delimiter in the list.
+
 Problem
 -------
 Given an unsorted list of strings, automatically discover all shared
@@ -126,8 +135,8 @@ class AutoPrefixGrouper:
     # ------------------------------------------------------------------ #
 
     def fit(self, strings: list,
-            prefix_depth: str | None = None,
-            position_index: int = -1) -> "AutoPrefixGrouper":
+            prefix_depth: "str | list[str] | None" = None,
+            position_index: "int | list[int]" = -1) -> "AutoPrefixGrouper":
         """Discover prefix groups from a list of values.
 
         All values are accepted. Non-string values are converted to strings
@@ -141,17 +150,31 @@ class AutoPrefixGrouper:
             Empty strings are handled. Non-string elements (int, float, mixed)
             are converted to str with a printed warning.
 
-        prefix_depth : str or None, optional
-            A single delimiter character. When given, each discovered prefix
-            is trimmed to end at a chosen occurrence of this character.
-            Default ``None`` means no trimming — full algorithm behaviour.
+        prefix_depth : str or list[str] or None, optional
+            A delimiter character, or an ordered list of delimiter characters.
+            When given, each discovered prefix is trimmed to end at a chosen
+            occurrence of the matched delimiter.
+            Default ``None`` means no trimming.
+
+            When a list is given, delimiters are tried in the order supplied.
+            For each string, the first delimiter found in that string wins.
+            The string is cut exactly once — at the paired ``position_index``.
+            If no delimiter in the list is found in a string, the original
+            prefix from the algorithm is kept unchanged.
 
             Use :meth:`inspect_prefix` on a representative string to see
-            which ``position_index`` to pass for your data.
+            which ``position_index`` suits your data.
 
-        position_index : int, optional
-            Which occurrence of ``prefix_depth`` to trim at. Only used when
-            ``prefix_depth`` is set.
+        position_index : int or list[int], optional
+            Which occurrence of the matched delimiter to trim at.
+            Only used when ``prefix_depth`` is set.
+
+            When ``position_index`` is a single ``int`` it applies to every
+            delimiter in ``prefix_depth``.
+
+            When ``position_index`` is a list it must have the same length as
+            ``prefix_depth``. Each entry is paired positionally:
+            ``prefix_depth[i]`` uses ``position_index[i]``.
 
             ``-1`` (default) trims at the last occurrence within the prefix.
             ``1`` trims at the first occurrence, ``2`` at the second, etc.
@@ -166,8 +189,9 @@ class AutoPrefixGrouper:
         TypeError
             If ``strings`` is not a list.
         ValueError
-            If ``strings`` is empty, or ``prefix_depth`` is not a
-            single character.
+            If ``strings`` is empty, ``prefix_depth`` contains an entry that
+            is not a single character, or ``prefix_depth`` and
+            ``position_index`` are both lists of different lengths.
 
         Examples
         --------
@@ -182,6 +206,19 @@ class AutoPrefixGrouper:
         >>> g = AutoPrefixGrouper().fit(uris, prefix_depth="/", position_index=4)
         >>> g.get_groups()
         {'http://semanticscience.org/resource/': [...]}
+
+        >>> # Mixed data: some strings use "#", others use "/"
+        >>> mixed = [
+        ...     "http://purl.obolibrary.org/obo/GO_0001234",
+        ...     "http://purl.obolibrary.org/obo/GO_0005678",
+        ...     "http://www.w3.org/2002/07/owl#Class",
+        ...     "http://www.w3.org/2002/07/owl#ObjectProperty",
+        ... ]
+        >>> g = AutoPrefixGrouper().fit(
+        ...     mixed,
+        ...     prefix_depth=["#", "/"],
+        ...     position_index=[-1, 5],
+        ... )
         """
         if not isinstance(strings, list):
             raise TypeError(f"Expected list, got {type(strings).__name__}")
@@ -189,10 +226,36 @@ class AutoPrefixGrouper:
             raise ValueError(
                 "Blank list detected. Cannot process an empty list."
             )
+
+        # Normalise prefix_depth to list[str] or None
         if prefix_depth is not None:
-            if not isinstance(prefix_depth, str) or len(prefix_depth) != 1:
+            if isinstance(prefix_depth, str):
+                prefix_depth = [prefix_depth]
+            if not isinstance(prefix_depth, list):
                 raise ValueError(
-                    "prefix_depth must be a single character string."
+                    "prefix_depth must be a single character string or a list "
+                    "of single character strings."
+                )
+            for d in prefix_depth:
+                if not isinstance(d, str) or len(d) != 1:
+                    raise ValueError(
+                        f"Each entry in prefix_depth must be a single "
+                        f"character string; got {d!r}."
+                    )
+
+        # Normalise position_index to list[int] or single int
+        if prefix_depth is not None:
+            if isinstance(position_index, list):
+                if len(position_index) != len(prefix_depth):
+                    raise ValueError(
+                        f"prefix_depth has {len(prefix_depth)} entries but "
+                        f"position_index has {len(position_index)}. "
+                        f"They must have the same length, or supply a single "
+                        f"int to apply to all delimiters."
+                    )
+            elif not isinstance(position_index, int):
+                raise ValueError(
+                    "position_index must be an int or a list of ints."
                 )
 
         # Detect all unique types present in the input
@@ -633,8 +696,8 @@ class AutoPrefixGrouper:
             print(f'position_index={idx} : "{trimmed}"')
 
     def preview_fit(self, strings: list,
-                    prefix_depth: str,
-                    position_index: int = -1) -> dict:
+                    prefix_depth: "str | list[str]",
+                    position_index: "int | list[int]" = -1) -> dict:
         """Return what :meth:`fit` would produce without changing object state.
 
         Use this to verify grouping output before committing to :meth:`fit`.
@@ -644,11 +707,12 @@ class AutoPrefixGrouper:
         ----------
         strings : list
             The same list you plan to pass to :meth:`fit`.
-        prefix_depth : str
-            A single delimiter character — same as :meth:`fit`.
-        position_index : int, optional
-            Which occurrence of ``prefix_depth`` to trim at — same as
-            :meth:`fit`. Default ``-1`` (last occurrence).
+        prefix_depth : str or list[str]
+            Single delimiter or ordered list of delimiters — same as
+            :meth:`fit`.
+        position_index : int or list[int], optional
+            Which occurrence to trim at — same as :meth:`fit`.
+            Default ``-1`` (last occurrence within the prefix).
 
         Returns
         -------
@@ -681,10 +745,71 @@ class AutoPrefixGrouper:
             )
 
     @staticmethod
-    def _apply_prefix_depth(groups: dict[str, list[str]],
-                             delimiter: str,
-                             position_index: int) -> dict[str, list[str]]:
-        """Trim each prefix key to end at a chosen occurrence of delimiter.
+    def _resolve_cut(string: str,
+                     delimiters: "list[str]",
+                     indices: "list[int]") -> "tuple[str, int] | None":
+        """Return (delimiter, position_index) for the first delimiter found in string.
+
+        Tries delimiters in order. Returns ``None`` if none are found.
+
+        Parameters
+        ----------
+        string : str
+            The string to inspect.
+        delimiters : list[str]
+            Ordered list of single-character delimiters.
+        indices : list[int]
+            Paired position indices, same length as ``delimiters``.
+
+        Returns
+        -------
+        tuple[str, int] or None
+            The winning (delimiter, position_index) pair, or None.
+        """
+        for delimiter, idx in zip(delimiters, indices):
+            if delimiter in string:
+                return (delimiter, idx)
+        return None
+
+    @staticmethod
+    def _trim_prefix(prefix: str, delimiter: str, position_index: int) -> str:
+        """Trim ``prefix`` to end at the chosen occurrence of ``delimiter``.
+
+        Parameters
+        ----------
+        prefix : str
+            The prefix string to trim.
+        delimiter : str
+            Single character to trim at.
+        position_index : int
+            -1 for last occurrence, 1 for first, 2 for second, etc.
+
+        Returns
+        -------
+        str
+            Trimmed prefix, or the original prefix if ``delimiter`` is not
+            found or ``position_index`` is out of range.
+        """
+        positions = [i for i, ch in enumerate(prefix) if ch == delimiter]
+        if not positions:
+            return prefix
+        if position_index == -1:
+            cut = positions[-1]
+        elif 1 <= position_index <= len(positions):
+            cut = positions[position_index - 1]
+        else:
+            return prefix
+        return prefix[:cut + 1]
+
+    @staticmethod
+    def _apply_prefix_depth(groups: dict,
+                             delimiters: "list[str]",
+                             position_index: "int | list[int]") -> dict:
+        """Trim each prefix key using the first matching delimiter per string.
+
+        For each string in a group, the delimiter list is tried in order.
+        The first delimiter found in that string determines where the prefix
+        is cut. Each string is cut at most once.
 
         After trimming, groups that collapse to the same key are re-split
         by running the algorithm again on their combined members, so that
@@ -694,11 +819,11 @@ class AutoPrefixGrouper:
         ----------
         groups : dict[str, list[str]]
             Raw groups from ``_run``.
-        delimiter : str
-            Single character to trim at.
-        position_index : int
-            Which occurrence to trim at. -1 means the last occurrence
-            within the prefix. 1 means the first, 2 the second, etc.
+        delimiters : list[str]
+            Ordered list of single-character delimiters.
+        position_index : int or list[int]
+            When a single int, it applies to all delimiters.
+            When a list, each entry is paired positionally with ``delimiters``.
 
         Returns
         -------
@@ -706,44 +831,51 @@ class AutoPrefixGrouper:
             Groups with trimmed prefix keys. Groups that merged after
             trimming are re-split where possible.
         """
-        # Step 1: collect trimmed keys and merged members
+        # Build a paired indices list of the same length as delimiters
+        if isinstance(position_index, int):
+            indices = [position_index] * len(delimiters)
+        else:
+            indices = list(position_index)
+
+        # Step 1: re-bucket each string under its trimmed prefix
+        # We operate per-string so each string picks its own delimiter.
         merged: dict[str, list[str]] = {}
-        # Track which new_prefix keys came from multiple original groups
         origin_count: dict[str, int] = {}
 
         for prefix, members in groups.items():
-            positions = [i for i, ch in enumerate(prefix) if ch == delimiter]
-            if not positions:
-                new_prefix = prefix
-            else:
-                if position_index == -1:
-                    cut = positions[-1]
-                elif 1 <= position_index <= len(positions):
-                    cut = positions[position_index - 1]
+            # Determine a new prefix for each member string individually
+            # (members in the same raw group may contain different delimiters)
+            per_string: dict[str, str] = {}  # original string -> new prefix
+            for s in members:
+                cut_info = AutoPrefixGrouper._resolve_cut(s, delimiters, indices)
+                if cut_info is None:
+                    # No delimiter matched in this string; keep the raw prefix
+                    per_string[s] = prefix
                 else:
-                    new_prefix = prefix
-                    merged.setdefault(new_prefix, []).extend(members)
-                    origin_count[new_prefix] = origin_count.get(new_prefix, 0) + 1
-                    continue
-                new_prefix = prefix[:cut + 1]
-            merged.setdefault(new_prefix, []).extend(members)
-            origin_count[new_prefix] = origin_count.get(new_prefix, 0) + 1
+                    delim, idx = cut_info
+                    per_string[s] = AutoPrefixGrouper._trim_prefix(prefix, delim, idx)
+
+            # Group strings by their new prefix
+            new_prefix_to_strings: dict[str, list[str]] = {}
+            for s, np in per_string.items():
+                new_prefix_to_strings.setdefault(np, []).append(s)
+
+            for np, strs in new_prefix_to_strings.items():
+                merged.setdefault(np, []).extend(strs)
+                origin_count[np] = origin_count.get(np, 0) + 1
 
         # Step 2: for keys that absorbed multiple original groups, re-split
         result: dict[str, list[str]] = {}
         for new_prefix, members in merged.items():
             if origin_count[new_prefix] > 1 and len(members) > 1:
-                # Re-run algorithm on merged members to recover sub-groups
                 sorted_members = sorted(
                     members, key=lambda x: (x[0] if x else "", len(x))
                 )
                 sub_groups = AutoPrefixGrouper._run(sorted_members)
                 if len(sub_groups) > 1:
-                    # Sub-groups recovered — use them
                     for sub_prefix, sub_members in sub_groups.items():
                         result.setdefault(sub_prefix, []).extend(sub_members)
                 else:
-                    # Cannot split further — keep the trimmed prefix
                     result.setdefault(new_prefix, []).extend(members)
             else:
                 result.setdefault(new_prefix, []).extend(members)
