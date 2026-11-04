@@ -502,8 +502,8 @@ MIT 2026
 
 Built with 💙 & overthinking.
 
-Inspired by intuition and simplicity.
+Inspired by intuition & simplicity.
 
-Drinking Boss Black Coffee and Itoen Oi Tea while building.
+Drinking Boss Black Coffee & Itoen Oi Tea while building.
 
 Beautified and documented with Claude.
