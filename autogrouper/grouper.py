@@ -47,7 +47,7 @@ from __future__ import annotations
 class AutoPrefixGrouper:
     """Automatic prefix-based grouper for string collections.
 
-    Discovers shared prefixes from the data itself — no delimiter,
+    Discovers shared prefixes from the data itself. No delimiter,
     no prefix length, and no prior schema knowledge required.
 
     Parameters
@@ -158,7 +158,7 @@ class AutoPrefixGrouper:
 
             When a list is given, delimiters are tried in the order supplied.
             For each string, the first delimiter found in that string wins.
-            The string is cut exactly once — at the paired ``position_index``.
+            The string is cut exactly once, at the paired ``position_index``.
             If no delimiter in the list is found in a string, the original
             prefix from the algorithm is kept unchanged.
 
@@ -347,11 +347,11 @@ class AutoPrefixGrouper:
         Returns
         -------
         dict
-            ``"flat"`` mode: ``dict[str, list[str]]`` — same shape as
+            ``"flat"`` mode: ``dict[str, list[str]]``. Same shape as
             :meth:`get_groups` but with sub-prefix keys added at every
             depth level.
 
-            ``"nested"`` mode: ``dict[str, list | dict]`` — values are
+            ``"nested"`` mode: ``dict[str, list | dict]``. Values are
             either a list (leaf, no further sub-grouping possible) or a
             nested dict of the same shape.
 
@@ -571,14 +571,14 @@ class AutoPrefixGrouper:
             One of ``"json"`` (default), ``"csv"``, ``"tsv"``, or
             ``"markdown"``.
 
-            * **json** — a JSON object mapping each prefix to its list of
+            * **json**: a JSON object mapping each prefix to its list of
               strings.
-            * **csv** — two columns, ``prefix`` and ``string``, one row per
+            * **csv**: two columns, ``prefix`` and ``string``, one row per
               string. Header row always included. Fields containing commas or
               double-quotes are quoted per RFC 4180.
-            * **tsv** — same layout as CSV but tab-separated. No quoting is
+            * **tsv**: same layout as CSV but tab-separated. No quoting is
               applied; fields are written as-is.
-            * **markdown** — a Markdown table with ``| prefix | string |``
+            * **markdown**: a Markdown table with ``| prefix | string |``
               columns, suitable for README files and JOSS papers.
 
         Returns
@@ -708,10 +708,10 @@ class AutoPrefixGrouper:
         strings : list
             The same list you plan to pass to :meth:`fit`.
         prefix_depth : str or list[str]
-            Single delimiter or ordered list of delimiters — same as
+            Single delimiter or ordered list of delimiters. Same as
             :meth:`fit`.
         position_index : int or list[int], optional
-            Which occurrence to trim at — same as :meth:`fit`.
+            Which occurrence to trim at. Same as :meth:`fit`.
             Default ``-1`` (last occurrence within the prefix).
 
         Returns
