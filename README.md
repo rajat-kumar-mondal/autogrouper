@@ -10,7 +10,7 @@ Automatic prefix-based grouping of string collections. No delimiter. No schema. 
 
 ## The story 📖
 
-While working with large collections of ontology terms and semantic web URIs, a simple need came up: group these strings by their shared prefix. The strings looked like `rdf:type`, `owl:Class`, `GO:0001234`, `http://purl.obolibrary.org/obo/RO_0000001` — hundreds of them, from different namespaces, mixed together in a flat list.
+While working with large collections of ontology terms and semantic web URIs, a simple need came up: group these strings by their shared prefix. The strings looked like `rdf:type`, `owl:Class`, `GO:0001234`, `http://purl.obolibrary.org/obo/RO_0000001`. Hundreds of them, from different namespaces, mixed together in a flat list.
 
 The obvious question was: does a tool exist that can do this automatically, without being told what the delimiter is, without a predefined schema, without any prior knowledge of the data?
 
@@ -359,7 +359,7 @@ An empty list raises `ValueError`. Duplicate strings are preserved.
 You are working with RDF triples, OWL classes, or ontology term IDs from databases like GO, CHEBI, or SIO. The terms arrive as a flat list from a SPARQL query. `autogrouper` groups them by namespace instantly, with no hardcoded prefix list.
 
 **Bioinformatics identifiers**
-Accession numbers, gene IDs, protein IDs, and pathway identifiers from multiple databases land in the same column. `autogrouper` separates them by their natural prefix pattern — `ENSG`, `hsa-mir`, `UniRef50_`, `IPR` — without you knowing those patterns in advance.
+Accession numbers, gene IDs, protein IDs, and pathway identifiers from multiple databases land in the same column. `autogrouper` separates them by their natural prefix pattern (`ENSG`, `hsa-mir`, `UniRef50_`, `IPR`) without you knowing those patterns in advance.
 
 **Log analysis**
 Cloud service logs, S3 keys, or application log lines share structural prefixes like `prod/api/`, `prod/db/`, `staging/api/`. `autogrouper` groups them so you can analyse each subsystem separately.
@@ -374,7 +374,7 @@ A list of file paths from an unfamiliar directory tree. `autogrouper` groups the
 Environment variables like `DB_HOST`, `DB_PORT`, `DB_NAME`, `REDIS_HOST`, `REDIS_PORT` are easier to audit and validate when grouped by their natural prefix.
 
 **Any flat list you did not design**
-If you received the list from somewhere else — a third-party API, a collaborator, a legacy system — and want to understand its structure quickly, `autogrouper` is the first tool to reach for.
+If you received the list from a third-party API, a collaborator, or a legacy system and want to understand its structure quickly, `autogrouper` is the first tool to reach for.
 
 ---
 
@@ -415,13 +415,11 @@ No trie, hash table, or suffix array is required. Zero imports. Runs on CPython 
 
 This package was built by a human. The core algorithm, its design, and all architectural decisions are original.
 
-Claude (by Anthropic) was used during development for:
-- Code review and edge case suggestions
-- Writing and improving docstrings
-- Generating and expanding the test suite
-- Structuring and writing this documentation
+Claude Sonnet 4.6 by Anthropic was used during development. Specifically, it assisted with code review and edge case identification, writing and refining docstrings, generating and expanding the test suite from an initial set to 287 cases, and structuring and writing this documentation.
 
-All generated content was reviewed, verified, and adjusted before inclusion. The 287 test cases were checked against real algorithm output, not assumed correct.
+The model was accessed through the Claude.ai interface. No other AI tools, code generation assistants, or large language models were used at any stage.
+
+All output from the model was reviewed manually before inclusion. Every test case was checked against real algorithm output. Any suggested code that did not match observed behaviour was corrected or discarded.
 
 ---
 
