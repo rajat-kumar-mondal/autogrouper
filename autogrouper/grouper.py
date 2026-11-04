@@ -13,15 +13,11 @@ No external dependencies. Pure Python 3.6+.
 
 Changes
 -------
-0.2.4
-    ``get_groups()`` gains a ``count`` parameter.
-    When ``True``, returns ``dict[str, int]`` with member count per group.
-    Cannot be combined with ``strip_prefix=True``.
-
-0.2.3
-    ``get_groups()`` gains a ``strip_prefix`` parameter.
-    When ``True``, each member string has the group key removed from its
-    start, returning only the suffix.
+0.2.2
+    ``get_groups()`` gains ``strip_prefix`` and ``count`` parameters.
+    ``strip_prefix=True`` removes the group key from each member string.
+    ``count=True`` returns ``dict[str, int]`` with member count per group.
+    The two cannot be combined.
 
 0.2.0
     ``prefix_depth`` and ``position_index`` now accept lists.
