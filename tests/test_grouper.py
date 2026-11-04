@@ -1,8 +1,8 @@
 """
 Tests for AutoPrefixGrouper class.
-301 test cases covering the core algorithm, recursive grouping,
+309 test cases covering the core algorithm, recursive grouping,
 prefix_depth (single and list), position_index (single and list),
-inspect_prefix, preview_fit, and export.
+strip_prefix, inspect_prefix, preview_fit, and export.
 
 Author: Rajat Kumar Mondal
 
@@ -2438,3 +2438,71 @@ def test_L014_position_index_list_with_negative_one():
     r = g.get_groups()
     total = sum(len(v) for v in r.values())
     assert total == 4
+
+# ── GROUP 42: strip_prefix parameter ─────────────────────────────────────────
+
+SP_URIS = [
+    "http://glycosmos.org/disease/DOID:0001816",
+    "http://glycosmos.org/disease/DOID:0002116",
+    "http://jcggdb.jp/rdf/diseases/ggdonto#CON0000",
+    "http://jcggdb.jp/rdf/diseases/ggdonto#CON0001",
+]
+
+def test_SP001_strip_prefix_false_returns_full_strings():
+    g = AutoPrefixGrouper().fit(SP_URIS, prefix_depth=["#", "/"], position_index=-1)
+    r = g.get_groups(strip_prefix=False)
+    all_strings = [s for v in r.values() for s in v]
+    assert all(s in SP_URIS for s in all_strings)
+
+
+def test_SP002_strip_prefix_true_removes_key_from_members():
+    g = AutoPrefixGrouper().fit(SP_URIS, prefix_depth=["#", "/"], position_index=-1)
+    r = g.get_groups(strip_prefix=True)
+    for prefix, members in r.items():
+        for s in members:
+            assert not s.startswith(prefix), f"{s!r} still starts with {prefix!r}"
+
+
+def test_SP003_strip_prefix_true_doid_suffix_correct():
+    g = AutoPrefixGrouper().fit(SP_URIS, prefix_depth=["#", "/"], position_index=-1)
+    r = g.get_groups(strip_prefix=True)
+    doid_key = next(k for k in r if "glycosmos" in k)
+    assert "DOID:0001816" in r[doid_key]
+    assert "DOID:0002116" in r[doid_key]
+
+
+def test_SP004_strip_prefix_true_con_suffix_correct():
+    g = AutoPrefixGrouper().fit(SP_URIS, prefix_depth=["#", "/"], position_index=-1)
+    r = g.get_groups(strip_prefix=True)
+    con_key = next(k for k in r if "ggdonto" in k)
+    assert "CON0000" in r[con_key]
+    assert "CON0001" in r[con_key]
+
+
+def test_SP005_strip_prefix_preserves_total_count():
+    g = AutoPrefixGrouper().fit(SP_URIS, prefix_depth=["#", "/"], position_index=-1)
+    r = g.get_groups(strip_prefix=True)
+    assert sum(len(v) for v in r.values()) == len(SP_URIS)
+
+
+def test_SP006_strip_prefix_default_is_false():
+    g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label", "owl:Class"])
+    r_default = g.get_groups()
+    r_explicit = g.get_groups(strip_prefix=False)
+    assert r_default == r_explicit
+
+
+def test_SP007_strip_prefix_no_prefix_depth_full_prefix_removed():
+    g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label"])
+    r = g.get_groups(strip_prefix=True)
+    rdf_key = next(k for k in r if k.startswith("rdf"))
+    for s in r[rdf_key]:
+        assert not s.startswith(rdf_key)
+
+
+def test_SP008_strip_prefix_singleton_group():
+    g = AutoPrefixGrouper().fit(["owl:Class", "rdf:type", "rdf:label"])
+    r = g.get_groups(strip_prefix=True)
+    owl_key = next(k for k in r if "owl" in k)
+    # singleton: full string minus the prefix key
+    assert len(r[owl_key]) == 1

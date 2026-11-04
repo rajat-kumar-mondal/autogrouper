@@ -419,7 +419,7 @@ If you received the list from a third-party API, a collaborator, or a legacy sys
 | Method | Requires fit | Description |
 |---|---|---|
 | `fit(strings, prefix_depth, position_index)` | No | Discover groups. `prefix_depth` and `position_index` each accept a single value or a list. Returns `self`. |
-| `get_groups()` | Yes | `dict[str, list[str]]` of all groups. |
+| `get_groups(strip_prefix)` | Yes | `dict[str, list[str]]` of all groups. `strip_prefix=True` removes the group key from the start of each member, returning only the suffix. |
 | `get_groups_recursive(mode, singletons)` | Yes | Groups at every depth level. |
 | `get_prefix_for(string)` | Yes | Prefix key for a string, or `None`. |
 | `get_prefixes()` | Yes | Sorted list of all prefix keys. |
@@ -537,7 +537,7 @@ Run with full output including print statements:
 pytest tests/ -v -s
 ```
 
-301 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), inspect, preview, and all four export formats.
+309 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), strip_prefix, inspect, preview, and all four export formats.
 
 ---
 
@@ -552,7 +552,7 @@ autogrouper/
 │   ├── algorithm.png      # Algorithm diagram (embedded in README)
 │   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
-│   └── test_grouper.py    # 301 test cases
+│   └── test_grouper.py    # 309 test cases
 ├── CONTRIBUTORS           # Author and contribution record
 ├── LICENSE                # MIT license
 ├── README.md              # Full documentation

@@ -13,6 +13,11 @@ No external dependencies. Pure Python 3.6+.
 
 Changes
 -------
+0.2.3
+    ``get_groups()`` gains a ``strip_prefix`` parameter.
+    When ``True``, each member string has the group key removed from its
+    start, returning only the suffix.
+
 0.2.0
     ``prefix_depth`` and ``position_index`` now accept lists.
     When both are lists they must have the same length.
@@ -285,14 +290,22 @@ class AutoPrefixGrouper:
         self._n_strings = len(strings)
         return self
 
-    def get_groups(self) -> dict[str, list[str]]:
+    def get_groups(self, strip_prefix: bool = False) -> dict[str, list[str]]:
         """Return the discovered prefix groups.
+
+        Parameters
+        ----------
+        strip_prefix : bool, optional
+            When ``True``, each member string has the group key removed
+            from its start, returning only the suffix portion.
+            Default ``False`` returns full strings.
 
         Returns
         -------
         dict[str, list[str]]
             Keys are discovered prefixes. Values are lists of strings
-            that share that prefix.
+            that share that prefix (or their suffixes when
+            ``strip_prefix=True``).
 
         Raises
         ------
@@ -304,9 +317,17 @@ class AutoPrefixGrouper:
         >>> g = AutoPrefixGrouper().fit(["os.path", "os.getcwd", "sys.argv"])
         >>> g.get_groups()
         {'os.': ['os.getcwd', 'os.path'], 'sys.argv': ['sys.argv']}
+        >>> g.get_groups(strip_prefix=True)
+        {'os.': ['getcwd', 'path'], 'sys.argv': ['']}
         """
         self._check_fitted()
-        return dict(self._groups)
+        if not strip_prefix:
+            return dict(self._groups)
+        result: dict[str, list[str]] = {}
+        for prefix, members in self._groups.items():
+            plen = len(prefix)
+            result[prefix] = [s[plen:] if s.startswith(prefix) else s for s in members]
+        return result
 
     def get_groups_recursive(self,
                               mode: str = "flat",
