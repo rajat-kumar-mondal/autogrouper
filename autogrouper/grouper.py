@@ -864,23 +864,33 @@ class AutoPrefixGrouper:
                 merged.setdefault(np, []).extend(strs)
                 origin_raw_prefixes.setdefault(np, set()).add(prefix)
 
-        # Step 2: for keys that absorbed strings from multiple *different* raw
-        # prefixes, re-split to recover sub-groups (e.g. GO_ and RO_ both
-        # trimmed to the same /obo/ prefix).
-        # Do NOT re-split when strings from the same raw prefix were all
-        # trimmed to the same new key. That is intentional delimiter grouping.
+        # Step 2: for buckets that absorbed strings from multiple different raw
+        # prefixes, attempt a re-split only when those strings have genuinely
+        # different leading characters after the trimmed prefix. This keeps
+        # GO_ and RO_ separate (different first chars) while keeping all
+        # ggdonto#CON* strings together (same first char after the # cut).
         result: dict[str, list[str]] = {}
         for new_prefix, members in merged.items():
             n_origins = len(origin_raw_prefixes[new_prefix])
             if n_origins > 1 and len(members) > 1:
-                sorted_members = sorted(
-                    members, key=lambda x: (x[0] if x else "", len(x))
-                )
-                sub_groups = AutoPrefixGrouper._run(sorted_members)
-                if len(sub_groups) > 1:
-                    for sub_prefix, sub_members in sub_groups.items():
-                        result.setdefault(sub_prefix, []).extend(sub_members)
+                # Check whether members diverge in the first character that
+                # follows the trimmed prefix.
+                plen = len(new_prefix)
+                first_chars = {s[plen] if len(s) > plen else "" for s in members}
+                if len(first_chars) > 1:
+                    # Genuinely different namespaces merged. Re-split.
+                    sorted_members = sorted(
+                        members, key=lambda x: (x[0] if x else "", len(x))
+                    )
+                    sub_groups = AutoPrefixGrouper._run(sorted_members)
+                    if len(sub_groups) > 1:
+                        for sub_prefix, sub_members in sub_groups.items():
+                            result.setdefault(sub_prefix, []).extend(sub_members)
+                    else:
+                        result.setdefault(new_prefix, []).extend(members)
                 else:
+                    # Same leading character after prefix. Same namespace.
+                    # Keep as one group.
                     result.setdefault(new_prefix, []).extend(members)
             else:
                 result.setdefault(new_prefix, []).extend(members)
