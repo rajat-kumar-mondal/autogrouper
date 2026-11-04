@@ -10,7 +10,7 @@ Automatic prefix-based grouping of string collections. No delimiter. No schema. 
 
 ## The story 📖
 
-While working with large collections of ontology terms and semantic web URIs, a simple need came up: group these strings by their shared prefix. The strings looked like `rdf:type`, `owl:Class`, `GO:0001234`, `http://purl.obolibrary.org/obo/RO_0000001`. Hundreds of them, from different namespaces, mixed together in a flat list.
+While working with large collections of ontology terms and semantic web URIs, a simple need came up: group these strings by their shared prefix. The strings looked like `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`, `http://www.w3.org/2002/07/owl#Class`, `http://purl.obolibrary.org/obo/GO_0001234`, `http://purl.obolibrary.org/obo/RO_0000001`. Hundreds of them, from different namespaces, mixed together in a flat list.
 
 The obvious question was: does a tool exist that can do this automatically, without being told what the delimiter is, without a predefined schema, without any prior knowledge of the data?
 
@@ -356,7 +356,7 @@ An empty list raises `ValueError`. Duplicate strings are preserved.
 `autogrouper` is useful whenever you have a flat list of strings that carry hidden structure in their prefixes and you want to surface that structure without writing custom parsing code.
 
 **Semantic web and ontologies:**
-You are working with RDF triples, OWL classes, or ontology term IDs from databases like GO, CHEBI, or SIO. The terms arrive as a flat list from a SPARQL query. `autogrouper` groups them by namespace instantly, with no hardcoded prefix list.
+A SPARQL query returns a flat list of URIs like `http://www.w3.org/1999/02/22-rdf-syntax-ns#type`, `http://www.w3.org/2002/07/owl#Class`, `http://purl.obolibrary.org/obo/GO_0001234`, and `http://purl.obolibrary.org/obo/RO_0000001` all in the same column. `autogrouper` groups them by namespace without a hardcoded prefix list.
 
 **Bioinformatics identifiers:**
 Accession numbers, gene IDs, protein IDs, and pathway identifiers from multiple databases land in the same column. `autogrouper` separates them by their natural prefix pattern (`ENSG`, `hsa-mir`, `UniRef50_`, `IPR`) without you knowing those patterns in advance.
