@@ -1,8 +1,8 @@
 """
 Tests for AutoPrefixGrouper class.
-331 test cases covering the core algorithm, recursive grouping,
+347 test cases covering the core algorithm, recursive grouping,
 prefix_depth (single and list), position_index (single and list),
-resplit, strip_prefix, count, inspect_prefix, preview_fit, and export.
+resplit, URL scheme colon, strip_prefix, count, inspect_prefix, preview_fit, and export.
 
 Author: Rajat Kumar Mondal
 
@@ -2723,3 +2723,127 @@ def test_X004_count_total_equals_input_for_interleaved_data():
         data, prefix_depth="/", position_index=-1
     ).get_groups(count=True)
     assert sum(r.values()) == len(data)
+
+
+# ── GROUP 43: the colon of a URL scheme is not a delimiter ───────────────────
+
+SC_GENES = [f"http://glycosmos.org/glycogene/{i}" for i in (10, 1000, 10000, 55)]
+SC_PROTEINS = [
+    "http://glycosmos.org/glycoprotein/A0A076FRG6",
+    "http://glycosmos.org/glycoprotein/Q9Y2A7",
+    "http://glycosmos.org/glycoprotein/P01889",
+]
+SC_DOID = [f"http://glycosmos.org/disease/DOID:{i:07d}" for i in (1816, 10, 4)]
+SC_HASH = [
+    "http://jcggdb.jp/rdf/diseases/ggdonto#CON0001",
+    "http://jcggdb.jp/rdf/diseases/ggdonto#CON0002",
+]
+SC_ORDER = ["#", ":", "/"]
+
+
+def sc_fit(strings, delimiters=SC_ORDER, index=-1):
+    return AutoPrefixGrouper().fit(
+        strings, prefix_depth=delimiters, position_index=index
+    ).get_groups(count=True)
+
+
+def test_SC001_urls_without_a_local_colon_fall_through_to_slash():
+    r = sc_fit(SC_GENES + SC_PROTEINS)
+    assert r == {
+        "http://glycosmos.org/glycogene/": len(SC_GENES),
+        "http://glycosmos.org/glycoprotein/": len(SC_PROTEINS),
+    }
+
+
+def test_SC002_never_cuts_to_the_scheme():
+    r = sc_fit(SC_GENES + SC_PROTEINS + SC_DOID + SC_HASH)
+    assert not any(k in ("http:", "https:") for k in r)
+
+
+def test_SC003_local_colon_still_cuts_after_the_prefix():
+    r = sc_fit(SC_DOID)
+    assert r == {"http://glycosmos.org/disease/DOID:": len(SC_DOID)}
+
+
+def test_SC004_hash_wins_over_colon_and_slash():
+    r = sc_fit(SC_HASH)
+    assert r == {"http://jcggdb.jp/rdf/diseases/ggdonto#": len(SC_HASH)}
+
+
+def test_SC005_all_three_kinds_in_one_call():
+    r = sc_fit(SC_GENES + SC_DOID + SC_HASH)
+    assert r == {
+        "http://glycosmos.org/glycogene/": len(SC_GENES),
+        "http://glycosmos.org/disease/DOID:": len(SC_DOID),
+        "http://jcggdb.jp/rdf/diseases/ggdonto#": len(SC_HASH),
+    }
+
+
+def test_SC006_five_delimiters_behave_the_same_way():
+    r = sc_fit(SC_GENES + SC_DOID + SC_HASH, ["#", ":", "@", "|", "/"])
+    assert r == sc_fit(SC_GENES + SC_DOID + SC_HASH)
+
+
+def test_SC007_other_schemes_are_not_counted_either():
+    data = ["https://example.org/a/1", "https://example.org/a/2",
+            "ftp://example.org/b/1", "ftp://example.org/b/2"]
+    r = sc_fit(data)
+    assert r == {"https://example.org/a/": 2, "ftp://example.org/b/": 2}
+
+
+def test_SC008_colon_as_the_only_delimiter_keeps_the_raw_prefix_for_plain_urls():
+    r = AutoPrefixGrouper().fit(
+        SC_GENES, prefix_depth=":", position_index=-1
+    ).get_groups()
+    assert not any(k == "http:" for k in r)
+    assert sorted(s for v in r.values() for s in v) == sorted(SC_GENES)
+
+
+def test_SC009_colon_without_slashes_is_a_delimiter():
+    data = ["urn:miriam:doid:1816", "urn:miriam:doid:10", "urn:miriam:doid:4"]
+    r = AutoPrefixGrouper().fit(data, prefix_depth=":", position_index=-1).get_groups(count=True)
+    assert r == {"urn:miriam:doid:": 3}
+
+
+def test_SC010_curie_style_ids_cut_at_the_colon():
+    data = ["GO:0001234", "GO:0005678", "GO:0000001"]
+    r = AutoPrefixGrouper().fit(data, prefix_depth=["#", ":", "/"], position_index=-1).get_groups(count=True)
+    assert r == {"GO:": 3}
+
+
+def test_SC011_position_index_does_not_count_the_scheme_colon():
+    uris = ["http://glycosmos.org/disease/DOID:0001816",
+            "http://glycosmos.org/disease/DOID:0000010"]
+    r = AutoPrefixGrouper().fit(uris, prefix_depth=":", position_index=1).get_groups()
+    assert list(r) == ["http://glycosmos.org/disease/DOID:"]
+
+
+def test_SC012_inspect_prefix_skips_the_scheme_colon(capsys):
+    AutoPrefixGrouper().inspect_prefix("http://glycosmos.org/disease/DOID:0001816", ":")
+    out = capsys.readouterr().out
+    assert out.strip() == 'position_index=1 : "http://glycosmos.org/disease/DOID:"'
+
+
+def test_SC013_inspect_prefix_reports_missing_colon_for_plain_urls(capsys):
+    AutoPrefixGrouper().inspect_prefix("http://glycosmos.org/glycogene/10", ":")
+    assert "not found" in capsys.readouterr().out
+
+
+def test_SC014_slash_positions_are_unchanged():
+    g = AutoPrefixGrouper()
+    assert g._delimiter_positions("http://a.org/x", "/") == [5, 6, 12]
+    assert g._delimiter_positions("http://a.org/x/y", "#") == []
+
+
+def test_SC015_delimiter_positions_skip_only_the_scheme_colon():
+    g = AutoPrefixGrouper()
+    assert g._delimiter_positions("http://a.org/DOID:1", ":") == [17]
+    assert g._delimiter_positions("a:b:c", ":") == [1, 3]
+
+
+def test_SC016_no_string_is_lost_with_mixed_namespaces():
+    data = SC_GENES + SC_PROTEINS + SC_DOID + SC_HASH
+    r = AutoPrefixGrouper().fit(
+        data, prefix_depth=SC_ORDER, position_index=-1
+    ).get_groups()
+    assert sorted(s for v in r.values() for s in v) == sorted(data)

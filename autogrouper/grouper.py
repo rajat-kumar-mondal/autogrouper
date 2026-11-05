@@ -13,6 +13,16 @@ No external dependencies. Pure Python 3.6+.
 
 Changes
 -------
+0.2.4
+    The ``:`` that ends a URL scheme (the one in ``http://``) is no longer
+    treated as a delimiter. Before, ``prefix_depth=["#", ":", "/"]`` cut every
+    URL without another colon down to ``http:``, because ``:`` is tried before
+    ``/`` and every URL contains it. Now a URL such as
+    ``http://example.org/gene/10`` falls through to ``/``, while an
+    identifier such as ``DOID:0001816`` is still cut at its own colon. The
+    scheme colon is also skipped by ``position_index`` counting and by
+    ``inspect_prefix()``.
+
 0.2.3
     Fixed strings being lost or counted twice. When strings of different
     namespaces interleaved after sorting, the scan skipped some strings and
@@ -182,6 +192,11 @@ class AutoPrefixGrouper:
             The string is cut exactly once, at the paired ``position_index``.
             If no delimiter in the list is found in a string, the original
             prefix from the algorithm is kept unchanged.
+
+            The ``:`` of a URL scheme (``http://``) is not counted as a
+            delimiter, so ``["#", ":", "/"]`` cuts ``DOID:0001816`` at its
+            own colon but cuts ``http://example.org/gene/10`` at the last
+            ``/``.
 
             Use :meth:`inspect_prefix` on a representative string to see
             which ``position_index`` suits your data.
@@ -751,7 +766,8 @@ class AutoPrefixGrouper:
         string : str
             A representative string from your data.
         delimiter : str
-            A single character to inspect positions of.
+            A single character to inspect positions of. The ``:`` of a URL
+            scheme (``http://``) is not listed.
 
         Raises
         ------
@@ -773,7 +789,7 @@ class AutoPrefixGrouper:
         """
         if not isinstance(delimiter, str) or len(delimiter) != 1:
             raise ValueError("delimiter must be a single character string.")
-        positions = [i for i, ch in enumerate(string) if ch == delimiter]
+        positions = AutoPrefixGrouper._delimiter_positions(string, delimiter)
         if not positions:
             print(f'[autogrouper] "{delimiter}" not found in the string.')
             return
@@ -834,12 +850,39 @@ class AutoPrefixGrouper:
             )
 
     @staticmethod
+    def _delimiter_positions(text: str, delimiter: str) -> "list[int]":
+        """Return the index of every occurrence of ``delimiter`` in ``text``.
+
+        The ``:`` that ends a URL scheme (the one in ``http://``) is not
+        counted, because it is part of every URL and says nothing about
+        where the identifier starts. Any other ``:``, such as the one in
+        ``DOID:0001816``, is counted.
+
+        Parameters
+        ----------
+        text : str
+            The string to search.
+        delimiter : str
+            A single character.
+
+        Returns
+        -------
+        list[int]
+            Indices, left to right.
+        """
+        positions = [i for i, ch in enumerate(text) if ch == delimiter]
+        if delimiter == ":":
+            positions = [i for i in positions if text[i + 1:i + 3] != "//"]
+        return positions
+
+    @staticmethod
     def _resolve_cut(string: str,
                      delimiters: "list[str]",
                      indices: "list[int]") -> "tuple[str, int] | None":
         """Return (delimiter, position_index) for the first delimiter found in string.
 
-        Tries delimiters in order. Returns ``None`` if none are found.
+        Tries delimiters in order. Returns ``None`` if none are found. The
+        ``:`` of a URL scheme (``http://``) does not count as found.
 
         Parameters
         ----------
@@ -856,7 +899,7 @@ class AutoPrefixGrouper:
             The winning (delimiter, position_index) pair, or None.
         """
         for delimiter, idx in zip(delimiters, indices):
-            if delimiter in string:
+            if AutoPrefixGrouper._delimiter_positions(string, delimiter):
                 return (delimiter, idx)
         return None
 
@@ -877,9 +920,10 @@ class AutoPrefixGrouper:
         -------
         str
             Trimmed prefix, or the original prefix if ``delimiter`` is not
-            found or ``position_index`` is out of range.
+            found or ``position_index`` is out of range. The ``:`` of a URL
+            scheme (``http://``) is not counted as an occurrence.
         """
-        positions = [i for i, ch in enumerate(prefix) if ch == delimiter]
+        positions = AutoPrefixGrouper._delimiter_positions(prefix, delimiter)
         if not positions:
             return prefix
         if position_index == -1:

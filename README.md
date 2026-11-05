@@ -222,6 +222,24 @@ g.fit(data, prefix_depth=["#", "/", "@"], position_index=[4, 5, 1])
 # "#" cuts at 4th occurrence, "/" at 5th, "@" at 1st
 ```
 
+**Colons in URLs**
+
+Every URL contains a colon in its scheme (`http://`). That colon is not treated as a delimiter and is not counted by `position_index`, so a list such as `["#", ":", "/"]` works the way it reads: `#` first, then a colon in the identifier, then `/`.
+
+```python
+data = [
+    "http://glycosmos.org/disease/DOID:0001816",       # has a colon in the identifier
+    "http://glycosmos.org/glycogene/10",                # no colon after the scheme
+    "http://jcggdb.jp/rdf/diseases/ggdonto#CON0001",    # has a hash
+]
+g.fit(data, prefix_depth=["#", ":", "/"], position_index=-1).get_groups(count=True)
+# {'http://glycosmos.org/disease/DOID:': 1,
+#  'http://glycosmos.org/glycogene/': 1,
+#  'http://jcggdb.jp/rdf/diseases/ggdonto#': 1}
+```
+
+The list can hold any number of delimiters and each string uses the first one it contains.
+
 **The cut is the final grouping (`resplit=False`, the default)**
 
 Each string is cut once and that cut is the group. Identifiers that start with different letters, such as UniProt accessions, stay under one prefix:
@@ -575,7 +593,7 @@ Run with full output including print statements:
 pytest tests/ -v -s
 ```
 
-331 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, strip_prefix, count, inspect, preview, and all four export formats.
+347 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, URL scheme colon, strip_prefix, count, inspect, preview, and all four export formats.
 
 ---
 
@@ -590,7 +608,7 @@ autogrouper/
 │   ├── algorithm.png      # Algorithm diagram (embedded in README)
 │   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
-│   └── test_grouper.py    # 331 test cases
+│   └── test_grouper.py    # 347 test cases
 ├── LICENSE                # MIT license
 ├── README.md              # Full documentation
 └── pyproject.toml         # Build configuration and metadata
