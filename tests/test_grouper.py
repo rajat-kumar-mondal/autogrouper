@@ -1,13 +1,13 @@
 """
 Tests for AutoPrefixGrouper class.
-315 test cases covering the core algorithm, recursive grouping,
+329 test cases covering the core algorithm, recursive grouping,
 prefix_depth (single and list), position_index (single and list),
-strip_prefix, count, inspect_prefix, preview_fit, and export.
+resplit, strip_prefix, count, inspect_prefix, preview_fit, and export.
 
 Author: Rajat Kumar Mondal
 
 Created: 2026-11-04
-Last updated: 2026-11-04
+Last updated: 2026-11-05
 """
 
 import pytest
@@ -2555,6 +2555,110 @@ def test_CN005_count_and_strip_prefix_both_true_raises():
 def test_CN006_count_keys_match_get_groups_keys():
     g = AutoPrefixGrouper().fit(COUNT_STRINGS, prefix_depth=["#", "/"], position_index=-1)
     assert set(g.get_groups(count=True).keys()) == set(g.get_groups().keys())
+
+
+# ── GROUP 41: resplit parameter ──────────────────────────────────────────────
+
+RS_BASE = "http://glycosmos.org/glycoprotein/"
+RS_ACCESSIONS = [
+    RS_BASE + i for i in (
+        "A0A076FRG6", "A0A087WQQ9", "A0A087WS40", "A1L4K1", "A2RUB6",
+        "O00115", "O00116", "O00151", "O43657",
+        "P01889", "P01891", "P04430",
+        "Q9Y2A7", "Q9Y2A8", "Q9Y3Z3",
+    )
+]
+RS_OBO = [
+    "http://purl.obolibrary.org/obo/GO_0000001",
+    "http://purl.obolibrary.org/obo/GO_0000002",
+    "http://purl.obolibrary.org/obo/RO_0000001",
+    "http://purl.obolibrary.org/obo/RO_0000002",
+]
+
+
+def test_RS001_resplit_default_is_true_and_splits_accessions():
+    r = AutoPrefixGrouper().fit(
+        RS_ACCESSIONS, prefix_depth=["#", "/"], position_index=-1
+    ).get_groups()
+    assert len(r) > 1
+
+
+def test_RS002_resplit_false_keeps_accessions_under_one_prefix():
+    r = AutoPrefixGrouper().fit(
+        RS_ACCESSIONS, prefix_depth=["#", "/"], position_index=-1, resplit=False
+    ).get_groups()
+    assert list(r) == [RS_BASE]
+    assert len(r[RS_BASE]) == len(RS_ACCESSIONS)
+
+
+def test_RS003_resplit_false_count_matches_input():
+    r = AutoPrefixGrouper().fit(
+        RS_ACCESSIONS, prefix_depth="/", position_index=-1, resplit=False
+    ).get_groups(count=True)
+    assert r == {RS_BASE: len(RS_ACCESSIONS)}
+
+
+def test_RS004_resplit_true_still_separates_go_and_ro():
+    r = AutoPrefixGrouper().fit(
+        RS_OBO, prefix_depth="/", position_index=-1, resplit=True
+    ).get_groups()
+    assert any("GO_" in k for k in r)
+    assert any("RO_" in k for k in r)
+
+
+def test_RS005_resplit_false_keeps_go_and_ro_under_obo():
+    r = AutoPrefixGrouper().fit(
+        RS_OBO, prefix_depth="/", position_index=-1, resplit=False
+    ).get_groups()
+    assert list(r) == ["http://purl.obolibrary.org/obo/"]
+    assert len(r["http://purl.obolibrary.org/obo/"]) == 4
+
+
+def test_RS006_resplit_false_keeps_hash_and_slash_namespaces_apart():
+    data = RS_ACCESSIONS + [
+        "http://jcggdb.jp/rdf/diseases/ggdonto#CON0001",
+        "http://jcggdb.jp/rdf/diseases/ggdonto#CON0002",
+    ]
+    r = AutoPrefixGrouper().fit(
+        data, prefix_depth=["#", "/"], position_index=-1, resplit=False
+    ).get_groups(count=True)
+    assert r == {
+        RS_BASE: len(RS_ACCESSIONS),
+        "http://jcggdb.jp/rdf/diseases/ggdonto#": 2,
+    }
+
+
+def test_RS007_resplit_has_no_effect_without_prefix_depth():
+    a = AutoPrefixGrouper().fit(RS_ACCESSIONS, resplit=True).get_groups()
+    b = AutoPrefixGrouper().fit(RS_ACCESSIONS, resplit=False).get_groups()
+    assert a == b
+
+
+def test_RS008_resplit_must_be_a_bool():
+    for bad in ("no", 0, None):
+        try:
+            AutoPrefixGrouper().fit(
+                RS_ACCESSIONS, prefix_depth="/", resplit=bad
+            )
+            assert False, f"Expected ValueError for {bad!r}"
+        except ValueError:
+            pass
+
+
+def test_RS009_preview_fit_passes_resplit_through():
+    g = AutoPrefixGrouper()
+    r = g.preview_fit(
+        RS_ACCESSIONS, prefix_depth="/", position_index=-1, resplit=False
+    )
+    assert list(r) == [RS_BASE]
+
+
+def test_RS010_all_strings_preserved_with_resplit_false():
+    g = AutoPrefixGrouper().fit(
+        RS_ACCESSIONS, prefix_depth="/", position_index=-1, resplit=False
+    )
+    got = sorted(s for v in g.get_groups().values() for s in v)
+    assert got == sorted(RS_ACCESSIONS)
 
 
 # ── GROUP 42: every string lands in exactly one group ────────────────────────

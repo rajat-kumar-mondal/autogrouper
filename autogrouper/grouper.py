@@ -2,7 +2,7 @@
 Author: Rajat Kumar Mondal
 
 Created: 2026-11-04
-Last updated: 2026-11-04
+Last updated: 2026-11-05
 
 autogrouper.grouper
 ~~~~~~~~~~~~~~~~~~~
@@ -18,6 +18,15 @@ Changes
     namespaces interleaved after sorting, the scan skipped some strings and
     collected others again, so group members and counts were wrong. Every
     input string now lands in exactly one group.
+
+    ``fit()`` and ``preview_fit()`` gain a ``resplit`` parameter (default
+    ``True``, so existing behaviour is unchanged). When ``prefix_depth`` is
+    set, strings are cut once at the chosen delimiter. By default, a group
+    that was merged from several raw prefixes is then split again if the
+    characters right after the cut differ (this keeps ``GO_`` and ``RO_``
+    apart). ``resplit=False`` keeps the cut as the final result, so
+    identifiers such as UniProt accessions that start with different letters
+    stay under one prefix.
 
 0.2.2
     ``get_groups()`` gains ``strip_prefix`` and ``count`` parameters.
@@ -147,7 +156,8 @@ class AutoPrefixGrouper:
 
     def fit(self, strings: list,
             prefix_depth: "str | list[str] | None" = None,
-            position_index: "int | list[int]" = -1) -> "AutoPrefixGrouper":
+            position_index: "int | list[int]" = -1,
+            resplit: bool = True) -> "AutoPrefixGrouper":
         """Discover prefix groups from a list of values.
 
         All values are accepted. Non-string values are converted to strings
@@ -190,6 +200,21 @@ class AutoPrefixGrouper:
             ``-1`` (default) trims at the last occurrence within the prefix.
             ``1`` trims at the first occurrence, ``2`` at the second, etc.
 
+        resplit : bool, optional
+            Only used when ``prefix_depth`` is set. Default ``True``.
+
+            After the cut, strings that came from several different raw
+            prefixes can land in one group. With ``resplit=True`` such a
+            group is split again when the characters immediately after the
+            cut are not all the same. This keeps ``.../obo/GO_...`` and
+            ``.../obo/RO_...`` apart even though both are cut at ``.../obo/``.
+
+            Use ``resplit=False`` when the cut itself is the grouping you
+            want, for example ``.../glycoprotein/A0A076FRG6`` and
+            ``.../glycoprotein/Q9Y2A7`` should both stay under
+            ``.../glycoprotein/``. Each string is then cut once and the
+            result is final.
+
         Returns
         -------
         self : AutoPrefixGrouper
@@ -230,7 +255,20 @@ class AutoPrefixGrouper:
         ...     prefix_depth=["#", "/"],
         ...     position_index=[-1, 5],
         ... )
+
+        >>> # Keep the cut as the final grouping
+        >>> ids = [
+        ...     "http://glycosmos.org/glycoprotein/A0A076FRG6",
+        ...     "http://glycosmos.org/glycoprotein/Q9Y2A7",
+        ... ]
+        >>> g = AutoPrefixGrouper().fit(
+        ...     ids, prefix_depth="/", position_index=-1, resplit=False
+        ... )
+        >>> list(g.get_groups())
+        ['http://glycosmos.org/glycoprotein/']
         """
+        if not isinstance(resplit, bool):
+            raise ValueError("resplit must be True or False.")
         if not isinstance(strings, list):
             raise TypeError(f"Expected list, got {type(strings).__name__}")
         if len(strings) == 0:
@@ -287,7 +325,7 @@ class AutoPrefixGrouper:
 
         if prefix_depth is not None:
             self._groups = self._apply_prefix_depth(
-                raw_groups, prefix_depth, position_index
+                raw_groups, prefix_depth, position_index, resplit
             )
         else:
             self._groups = raw_groups
@@ -742,7 +780,8 @@ class AutoPrefixGrouper:
 
     def preview_fit(self, strings: list,
                     prefix_depth: "str | list[str]",
-                    position_index: "int | list[int]" = -1) -> dict:
+                    position_index: "int | list[int]" = -1,
+                    resplit: bool = True) -> dict:
         """Return what :meth:`fit` would produce without changing object state.
 
         Use this to verify grouping output before committing to :meth:`fit`.
@@ -758,6 +797,8 @@ class AutoPrefixGrouper:
         position_index : int or list[int], optional
             Which occurrence to trim at. Same as :meth:`fit`.
             Default ``-1`` (last occurrence within the prefix).
+        resplit : bool, optional
+            Same as :meth:`fit`. Default ``True``.
 
         Returns
         -------
@@ -776,7 +817,7 @@ class AutoPrefixGrouper:
         """
         temp = AutoPrefixGrouper()
         temp.fit(strings, prefix_depth=prefix_depth,
-                 position_index=position_index)
+                 position_index=position_index, resplit=resplit)
         return temp.get_groups()
 
     # ------------------------------------------------------------------ #
@@ -849,7 +890,8 @@ class AutoPrefixGrouper:
     @staticmethod
     def _apply_prefix_depth(groups: dict,
                              delimiters: "list[str]",
-                             position_index: "int | list[int]") -> dict:
+                             position_index: "int | list[int]",
+                             resplit: bool = True) -> dict:
         """Trim each prefix key using the first matching delimiter per string.
 
         For each string in a group, the delimiter list is tried in order.
@@ -858,7 +900,8 @@ class AutoPrefixGrouper:
 
         After trimming, groups that collapse to the same key are re-split
         by running the algorithm again on their combined members, so that
-        distinct sub-groups are not lost.
+        distinct sub-groups are not lost. This is skipped when ``resplit``
+        is ``False``, which makes the trimmed prefix the final group key.
 
         Parameters
         ----------
@@ -869,6 +912,9 @@ class AutoPrefixGrouper:
         position_index : int or list[int]
             When a single int, it applies to all delimiters.
             When a list, each entry is paired positionally with ``delimiters``.
+        resplit : bool
+            When ``False``, groups that merged after trimming are kept as one
+            group and the re-split step is skipped.
 
         Returns
         -------
@@ -917,7 +963,7 @@ class AutoPrefixGrouper:
         result: dict[str, list[str]] = {}
         for new_prefix, members in merged.items():
             n_origins = len(origin_raw_prefixes[new_prefix])
-            if n_origins > 1 and len(members) > 1:
+            if resplit and n_origins > 1 and len(members) > 1:
                 # Check whether members diverge in the first character that
                 # follows the trimmed prefix.
                 plen = len(new_prefix)

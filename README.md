@@ -215,6 +215,24 @@ g.fit(data, prefix_depth=["#", "/", "@"], position_index=[4, 5, 1])
 # "#" cuts at 4th occurrence, "/" at 5th, "@" at 1st
 ```
 
+**Keeping the cut as the final grouping (`resplit=False`)**
+
+After the cut, a group that was merged from several raw prefixes is split again by default when the characters right after the cut differ. This keeps `.../obo/GO_...` and `.../obo/RO_...` apart even though both are cut at `.../obo/`.
+
+When the cut itself is the grouping you want, pass `resplit=False`. Identifiers that start with different letters, such as UniProt accessions, then stay under one prefix:
+
+```python
+uris = [
+    "http://glycosmos.org/glycoprotein/A0A076FRG6",
+    "http://glycosmos.org/glycoprotein/Q9Y2A7",
+    "http://glycosmos.org/glycogene/1000",
+]
+g.fit(uris, prefix_depth=["#", "/"], position_index=-1, resplit=False).get_groups(count=True)
+# {'http://glycosmos.org/glycogene/': 1, 'http://glycosmos.org/glycoprotein/': 2}
+```
+
+`resplit` defaults to `True` and has no effect when `prefix_depth` is not set. `preview_fit()` accepts it too.
+
 ---
 
 ## Recursive grouping
@@ -537,7 +555,7 @@ Run with full output including print statements:
 pytest tests/ -v -s
 ```
 
-315 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), strip_prefix, count, inspect, preview, and all four export formats.
+329 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, strip_prefix, count, inspect, preview, and all four export formats.
 
 ---
 
@@ -552,7 +570,7 @@ autogrouper/
 │   ├── algorithm.png      # Algorithm diagram (embedded in README)
 │   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
-│   └── test_grouper.py    # 315 test cases
+│   └── test_grouper.py    # 329 test cases
 ├── LICENSE                # MIT license
 ├── README.md              # Full documentation
 └── pyproject.toml         # Build configuration and metadata
