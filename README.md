@@ -553,7 +553,6 @@ autogrouper/
 │   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
 │   └── test_grouper.py    # 315 test cases
-├── CONTRIBUTORS           # Author and contribution record
 ├── LICENSE                # MIT license
 ├── README.md              # Full documentation
 └── pyproject.toml         # Build configuration and metadata
