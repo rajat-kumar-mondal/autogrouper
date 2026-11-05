@@ -9,7 +9,7 @@ description = "Automatic prefix-based grouping of string collections. No delimit
 readme = "README.md"
 license = "MIT"
 authors = [
-    { name = "Rajat Kumar Mondal" },
+    { name = "Rajat Kumar Mondal", email = "rajatmondal925@gmail.com" },
 ]
 keywords = [
     "prefix",
