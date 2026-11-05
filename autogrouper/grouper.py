@@ -13,6 +13,12 @@ No external dependencies. Pure Python 3.6+.
 
 Changes
 -------
+0.2.3
+    Fixed strings being lost or counted twice. When strings of different
+    namespaces interleaved after sorting, the scan skipped some strings and
+    collected others again, so group members and counts were wrong. Every
+    input string now lands in exactly one group.
+
 0.2.2
     ``get_groups()`` gains ``strip_prefix`` and ``count`` parameters.
     ``strip_prefix=True`` removes the group key from each member string.
@@ -35,10 +41,13 @@ prefix length, delimiter, or number of groups.
 Algorithm
 ---------
 1. Sort input by (first_char, length) so shortest strings anchor each
-   namespace and strings from different namespaces never interleave.
-2. Scan consecutive pairs to extract the longest common prefix.
-3. Collect all strings matching that prefix in a single forward pass.
-4. Repeat from the next unconsumed string.
+   namespace. Strings that share a first character (every URI starts with
+   "h") can still interleave by length, so matching never assumes that
+   members of a group sit next to each other.
+2. Scan the first two pending strings to extract the longest common prefix.
+3. Move every pending string that matches that prefix into the group, so
+   each string lands in exactly one group.
+4. Repeat until no strings are pending.
 
 Complexity
 ----------
@@ -94,45 +103,41 @@ class AutoPrefixGrouper:
         dict[str, list[str]]
             Mapping of discovered prefix -> list of matching strings.
         """
-        i = 0
-        last_index = len(strings) - 1
+        pending = list(strings)
         groups: dict[str, list[str]] = {}
 
-        while i <= last_index:
-            current = strings[i]
-            try:
-                neighbour = strings[i + 1]
-            except IndexError:
-                neighbour = strings[i]
+        while pending:
+            current = pending[0]
+            neighbour = pending[1] if len(pending) > 1 else current
 
             prefix = ""
             prefix_len = 0
-            remaining = strings[i:]
 
-            # Empty string branch: collect all consecutive empty strings
+            # Empty string branch: collect all empty strings
             if len(current) == 0:
-                for x in remaining:
-                    if len(x) == 0:
-                        i += 1
-                        groups.setdefault("", []).append("")
+                groups.setdefault("", []).extend(x for x in pending if len(x) == 0)
+                pending = [x for x in pending if len(x) > 0]
+                continue
 
             # Non-empty string branch: find prefix from consecutive pair
-            if len(current) > 0:
-                compare_len = min(len(current), len(neighbour))
-                for j in range(compare_len):
-                    if current[0] != neighbour[0]:
-                        prefix = current
-                        prefix_len = len(current)
-                        break
-                    if current[j] == neighbour[j]:
-                        prefix += current[j]
-                        prefix_len += 1
-                    else:
-                        break
-                for x in remaining:
-                    if x[:prefix_len] == prefix:
-                        i += 1
-                        groups.setdefault(prefix, []).append(x)
+            compare_len = min(len(current), len(neighbour))
+            for j in range(compare_len):
+                if current[0] != neighbour[0]:
+                    prefix = current
+                    prefix_len = len(current)
+                    break
+                if current[j] == neighbour[j]:
+                    prefix += current[j]
+                    prefix_len += 1
+                else:
+                    break
+
+            # Take every pending string that matches, wherever it sits, and
+            # remove it so each string lands in exactly one group.
+            groups.setdefault(prefix, []).extend(
+                x for x in pending if x[:prefix_len] == prefix
+            )
+            pending = [x for x in pending if x[:prefix_len] != prefix]
 
         return groups
 

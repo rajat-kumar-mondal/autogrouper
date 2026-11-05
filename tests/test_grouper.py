@@ -2555,3 +2555,50 @@ def test_CN005_count_and_strip_prefix_both_true_raises():
 def test_CN006_count_keys_match_get_groups_keys():
     g = AutoPrefixGrouper().fit(COUNT_STRINGS, prefix_depth=["#", "/"], position_index=-1)
     assert set(g.get_groups(count=True).keys()) == set(g.get_groups().keys())
+
+
+# ── GROUP 42: every string lands in exactly one group ────────────────────────
+
+def _flat(r):
+    return [s for v in r.values() for s in v]
+
+
+def test_X001_interleaved_namespaces_lose_no_strings():
+    base = "http://glycosmos.org/glycoprotein/"
+    ids = ["A0A076FRG6", "A0A087WQQ9", "A0A087WS40", "A1L4K1", "A2RUB6",
+           "O00115", "O00116", "O00151", "O43657",
+           "P01889", "P01891", "P04430", "Q9Y2A7", "Q9Y2A8", "Q9Y3Z3"]
+    data = [base + i for i in ids]
+    r = fit(data)
+    assert sorted(_flat(r)) == sorted(data)
+
+
+def test_X002_interleaved_namespaces_have_no_duplicates():
+    base = "http://glycosmos.org/glycoprotein/"
+    ids = ["A0A076FRG6", "A0A087WQQ9", "A0A087WS40", "A1L4K1", "A2RUB6",
+           "O00115", "O00116", "O00151", "O43657"]
+    r = fit([base + i for i in ids])
+    flat = _flat(r)
+    assert len(flat) == len(set(flat))
+
+
+def test_X003_mixed_namespaces_by_length_keep_every_string():
+    data = (
+        ["http://a.org/x/" + "q" * n for n in (1, 5, 9)]
+        + ["http://b.org/y/" + "r" * n for n in (2, 5, 8)]
+        + ["http://a.org/x/" + "p" * n for n in (3, 7)]
+    )
+    for kwargs in ({}, {"prefix_depth": "/", "position_index": -1},
+                   {"prefix_depth": ["#", "/"], "position_index": -1}):
+        r = AutoPrefixGrouper().fit(data, **kwargs).get_groups()
+        assert sorted(_flat(r)) == sorted(data), kwargs
+
+
+def test_X004_count_total_equals_input_for_interleaved_data():
+    base = "http://glycosmos.org/glycoprotein/"
+    ids = ["A0A076FRG6", "A0A087WQQ9", "A1L4K1", "O00115", "O43657", "P01889"]
+    data = [base + i for i in ids]
+    r = AutoPrefixGrouper().fit(
+        data, prefix_depth="/", position_index=-1
+    ).get_groups(count=True)
+    assert sum(r.values()) == len(data)
