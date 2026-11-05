@@ -1,8 +1,8 @@
 """
 Tests for AutoPrefixGrouper class.
-347 test cases covering the core algorithm, recursive grouping,
+357 test cases covering the core algorithm, recursive grouping,
 prefix_depth (single and list), position_index (single and list),
-resplit, URL scheme colon, strip_prefix, count, inspect_prefix, preview_fit, and export.
+resplit, skip_scheme_colon, strip_prefix, count, inspect_prefix, preview_fit, and export.
 
 Author: Rajat Kumar Mondal
 
@@ -2845,5 +2845,94 @@ def test_SC016_no_string_is_lost_with_mixed_namespaces():
     data = SC_GENES + SC_PROTEINS + SC_DOID + SC_HASH
     r = AutoPrefixGrouper().fit(
         data, prefix_depth=SC_ORDER, position_index=-1
+    ).get_groups()
+    assert sorted(s for v in r.values() for s in v) == sorted(data)
+
+
+# ── GROUP 44: skip_scheme_colon argument ─────────────────────────────────────
+
+def test_SK001_false_restores_the_old_cut_to_http():
+    r = AutoPrefixGrouper().fit(
+        SC_GENES + SC_PROTEINS, prefix_depth=SC_ORDER, position_index=-1,
+        skip_scheme_colon=False,
+    ).get_groups(count=True)
+    assert r == {"http:": len(SC_GENES) + len(SC_PROTEINS)}
+
+
+def test_SK002_default_equals_explicit_true():
+    data = SC_GENES + SC_DOID + SC_HASH
+    a = AutoPrefixGrouper().fit(data, prefix_depth=SC_ORDER).get_groups()
+    b = AutoPrefixGrouper().fit(
+        data, prefix_depth=SC_ORDER, skip_scheme_colon=True
+    ).get_groups()
+    assert a == b
+
+
+def test_SK003_false_still_cuts_identifiers_at_their_own_colon():
+    r = AutoPrefixGrouper().fit(
+        SC_DOID, prefix_depth=SC_ORDER, position_index=-1,
+        skip_scheme_colon=False,
+    ).get_groups(count=True)
+    assert r == {"http://glycosmos.org/disease/DOID:": len(SC_DOID)}
+
+
+def test_SK004_skip_scheme_colon_must_be_a_bool():
+    for bad in ("yes", 1, None):
+        try:
+            AutoPrefixGrouper().fit(
+                SC_GENES, prefix_depth=SC_ORDER, skip_scheme_colon=bad
+            )
+            assert False, f"Expected ValueError for {bad!r}"
+        except ValueError:
+            pass
+
+
+def test_SK005_preview_fit_passes_the_argument_through():
+    g = AutoPrefixGrouper()
+    on = g.preview_fit(SC_GENES, prefix_depth=SC_ORDER, skip_scheme_colon=True)
+    off = g.preview_fit(SC_GENES, prefix_depth=SC_ORDER, skip_scheme_colon=False)
+    assert list(on) == ["http://glycosmos.org/glycogene/"]
+    assert list(off) == ["http:"]
+
+
+def test_SK006_inspect_prefix_lists_the_scheme_colon_when_false(capsys):
+    AutoPrefixGrouper().inspect_prefix(
+        "http://glycosmos.org/disease/DOID:0001816", ":", skip_scheme_colon=False
+    )
+    lines = capsys.readouterr().out.strip().splitlines()
+    assert lines == [
+        'position_index=1 : "http:"',
+        'position_index=2 : "http://glycosmos.org/disease/DOID:"',
+    ]
+
+
+def test_SK007_position_index_counts_the_scheme_colon_when_false():
+    uris = ["http://glycosmos.org/disease/DOID:0001816",
+            "http://glycosmos.org/disease/DOID:0000010"]
+    r = AutoPrefixGrouper().fit(
+        uris, prefix_depth=":", position_index=1, skip_scheme_colon=False
+    ).get_groups()
+    assert list(r) == ["http:"]
+
+
+def test_SK008_argument_has_no_effect_without_a_colon_delimiter():
+    data = SC_GENES + SC_HASH
+    a = AutoPrefixGrouper().fit(
+        data, prefix_depth=["#", "/"], skip_scheme_colon=True).get_groups()
+    b = AutoPrefixGrouper().fit(
+        data, prefix_depth=["#", "/"], skip_scheme_colon=False).get_groups()
+    assert a == b
+
+
+def test_SK009_delimiter_positions_false_includes_the_scheme_colon():
+    g = AutoPrefixGrouper()
+    assert g._delimiter_positions("http://a.org/DOID:1", ":", False) == [4, 17]
+    assert g._delimiter_positions("http://a.org/DOID:1", ":", True) == [17]
+
+
+def test_SK010_no_string_is_lost_when_false():
+    data = SC_GENES + SC_PROTEINS + SC_DOID + SC_HASH
+    r = AutoPrefixGrouper().fit(
+        data, prefix_depth=SC_ORDER, position_index=-1, skip_scheme_colon=False
     ).get_groups()
     assert sorted(s for v in r.values() for s in v) == sorted(data)

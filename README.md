@@ -222,9 +222,9 @@ g.fit(data, prefix_depth=["#", "/", "@"], position_index=[4, 5, 1])
 # "#" cuts at 4th occurrence, "/" at 5th, "@" at 1st
 ```
 
-**Colons in URLs**
+**Colons in URLs (`skip_scheme_colon`)**
 
-Every URL contains a colon in its scheme (`http://`). That colon is not treated as a delimiter and is not counted by `position_index`, so a list such as `["#", ":", "/"]` works the way it reads: `#` first, then a colon in the identifier, then `/`.
+Every URL contains a colon in its scheme (`http://`). By default that colon is not treated as a delimiter and is not counted by `position_index` (`skip_scheme_colon=True`), so a list such as `["#", ":", "/"]` works the way it reads: `#` first, then a colon in the identifier, then `/`.
 
 ```python
 data = [
@@ -239,6 +239,14 @@ g.fit(data, prefix_depth=["#", ":", "/"], position_index=-1).get_groups(count=Tr
 ```
 
 The list can hold any number of delimiters and each string uses the first one it contains.
+
+Pass `skip_scheme_colon=False` if you want every colon to count, including the one in `http:`. A `":"` placed before `"/"` then cuts any URL without another colon down to `http:`, as in versions before 0.2.4:
+
+```python
+g.fit(data, prefix_depth=["#", ":", "/"], position_index=-1, skip_scheme_colon=False)
+```
+
+`inspect_prefix()` and `preview_fit()` accept the same argument, so use the same value in all three and the numbers match.
 
 **The cut is the final grouping (`resplit=False`, the default)**
 
@@ -593,7 +601,7 @@ Run with full output including print statements:
 pytest tests/ -v -s
 ```
 
-347 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, URL scheme colon, strip_prefix, count, inspect, preview, and all four export formats.
+357 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, skip_scheme_colon, strip_prefix, count, inspect, preview, and all four export formats.
 
 ---
 
@@ -608,7 +616,7 @@ autogrouper/
 │   ├── algorithm.png      # Algorithm diagram (embedded in README)
 │   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
-│   └── test_grouper.py    # 347 test cases
+│   └── test_grouper.py    # 357 test cases
 ├── LICENSE                # MIT license
 ├── README.md              # Full documentation
 └── pyproject.toml         # Build configuration and metadata
