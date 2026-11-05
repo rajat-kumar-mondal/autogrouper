@@ -233,8 +233,8 @@ data = [
     "http://jcggdb.jp/rdf/diseases/ggdonto#CON0001",    # has a hash
 ]
 g.fit(data, prefix_depth=["#", ":", "/"], position_index=-1).get_groups(count=True)
-# {'http://glycosmos.org/disease/DOID:': 1,
-#  'http://glycosmos.org/glycogene/': 1,
+# {'http://glycosmos.org/glycogene/': 1,
+#  'http://glycosmos.org/disease/DOID:': 1,
 #  'http://jcggdb.jp/rdf/diseases/ggdonto#': 1}
 ```
 
