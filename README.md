@@ -160,7 +160,7 @@ g.get_groups()
 
 ### When groups collapse after trimming
 
-If two separate groups trim to the same prefix, `autogrouper` automatically re-runs the algorithm on the combined members to restore the distinction:
+If two separate groups trim to the same prefix, they stay together as one group by default:
 
 ```python
 strings = [
@@ -171,13 +171,20 @@ strings = [
 ]
 
 AutoPrefixGrouper().fit(strings, prefix_depth="/", position_index=4).get_groups()
+# {"http://purl.obolibrary.org/obo/": [all four strings]}
+```
+
+If the groups are different namespaces that should stay apart, pass `resplit=True`. `autogrouper` then re-runs the algorithm on the combined members to restore the distinction:
+
+```python
+AutoPrefixGrouper().fit(strings, prefix_depth="/", position_index=4, resplit=True).get_groups()
 # {
 #     "http://purl.obolibrary.org/obo/GO_000000": ["...GO_0000001", "...GO_0000002"],
 #     "http://purl.obolibrary.org/obo/RO_000000": ["...RO_0000001", "...RO_0000002"],
 # }
 ```
 
-Both groups were originally trimmed to `http://purl.obolibrary.org/obo/` but the algorithm detected that they could be split further and did so automatically.
+Both groups were originally trimmed to `http://purl.obolibrary.org/obo/`, and with `resplit=True` the algorithm detects that they can be split further and does so.
 
 ### Multiple delimiters
 
@@ -215,11 +222,9 @@ g.fit(data, prefix_depth=["#", "/", "@"], position_index=[4, 5, 1])
 # "#" cuts at 4th occurrence, "/" at 5th, "@" at 1st
 ```
 
-**Keeping the cut as the final grouping (`resplit=False`)**
+**The cut is the final grouping (`resplit=False`, the default)**
 
-After the cut, a group that was merged from several raw prefixes is split again by default when the characters right after the cut differ. This keeps `.../obo/GO_...` and `.../obo/RO_...` apart even though both are cut at `.../obo/`.
-
-When the cut itself is the grouping you want, pass `resplit=False`. Identifiers that start with different letters, such as UniProt accessions, then stay under one prefix:
+Each string is cut once and that cut is the group. Identifiers that start with different letters, such as UniProt accessions, stay under one prefix:
 
 ```python
 uris = [
@@ -227,11 +232,26 @@ uris = [
     "http://glycosmos.org/glycoprotein/Q9Y2A7",
     "http://glycosmos.org/glycogene/1000",
 ]
-g.fit(uris, prefix_depth=["#", "/"], position_index=-1, resplit=False).get_groups(count=True)
+g.fit(uris, prefix_depth=["#", "/"], position_index=-1).get_groups(count=True)
 # {'http://glycosmos.org/glycogene/': 1, 'http://glycosmos.org/glycoprotein/': 2}
 ```
 
-`resplit` defaults to `True` and has no effect when `prefix_depth` is not set. `preview_fit()` accepts it too.
+**Splitting merged groups again (`resplit=True`)**
+
+Pass `resplit=True` when different namespaces share the same cut and should stay apart. A group that was merged from several raw prefixes is then split again if the characters right after the cut differ. For example `.../obo/GO_...` and `.../obo/RO_...` are both cut at `.../obo/`:
+
+```python
+obo = [
+    "http://purl.obolibrary.org/obo/GO_0000001",
+    "http://purl.obolibrary.org/obo/GO_0000002",
+    "http://purl.obolibrary.org/obo/RO_0000001",
+    "http://purl.obolibrary.org/obo/RO_0000002",
+]
+g.fit(obo, prefix_depth="/", position_index=-1, resplit=True).get_groups(count=True)
+# two groups, one for GO_ and one for RO_
+```
+
+Before version 0.2.3 this re-split always ran. `resplit` has no effect when `prefix_depth` is not set, and `preview_fit()` accepts it too.
 
 ---
 
@@ -555,7 +575,7 @@ Run with full output including print statements:
 pytest tests/ -v -s
 ```
 
-329 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, strip_prefix, count, inspect, preview, and all four export formats.
+331 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, strip_prefix, count, inspect, preview, and all four export formats.
 
 ---
 
@@ -570,7 +590,7 @@ autogrouper/
 │   ├── algorithm.png      # Algorithm diagram (embedded in README)
 │   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
-│   └── test_grouper.py    # 329 test cases
+│   └── test_grouper.py    # 331 test cases
 ├── LICENSE                # MIT license
 ├── README.md              # Full documentation
 └── pyproject.toml         # Build configuration and metadata

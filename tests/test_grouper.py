@@ -1,6 +1,6 @@
 """
 Tests for AutoPrefixGrouper class.
-329 test cases covering the core algorithm, recursive grouping,
+331 test cases covering the core algorithm, recursive grouping,
 prefix_depth (single and list), position_index (single and list),
 resplit, strip_prefix, count, inspect_prefix, preview_fit, and export.
 
@@ -1798,33 +1798,33 @@ OBO_STRINGS = [
 ]
 
 def test_M001_merged_groups_are_resplit():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4)
+    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
     r = g.get_groups()
     # Must not collapse into a single key
     assert len(r) > 1
 
 
 def test_M002_resplit_GO_group_exists():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4)
+    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
     r = g.get_groups()
     assert any("GO_" in k for k in r)
 
 
 def test_M003_resplit_RO_group_exists():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4)
+    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
     r = g.get_groups()
     assert any("RO_" in k for k in r)
 
 
 def test_M004_all_strings_preserved_after_resplit():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4)
+    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
     r = g.get_groups()
     total = sum(len(v) for v in r.values())
     assert total == len(OBO_STRINGS)
 
 
 def test_M005_no_string_duplicated_after_resplit():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4)
+    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
     r = g.get_groups()
     all_strings = [s for v in r.values() for s in v]
     assert len(all_strings) == len(set(all_strings))
@@ -1852,7 +1852,7 @@ def test_M007_three_namespaces_all_resplit():
         "http://example.org/obo/CC_0001",
         "http://example.org/obo/CC_0002",
     ]
-    g = AutoPrefixGrouper().fit(strings, prefix_depth="/", position_index=4)
+    g = AutoPrefixGrouper().fit(strings, prefix_depth="/", position_index=4, resplit=True)
     r = g.get_groups()
     assert len(r) >= 2
     total = sum(len(v) for v in r.values())
@@ -1883,7 +1883,7 @@ def test_M009_position_index_out_of_range_keeps_prefix():
 
 
 def test_M010_resplit_preserves_correct_members():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4)
+    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
     r = g.get_groups()
     go_key = next(k for k in r if "GO_" in k)
     ro_key = next(k for k in r if "RO_" in k)
@@ -2576,11 +2576,28 @@ RS_OBO = [
 ]
 
 
-def test_RS001_resplit_default_is_true_and_splits_accessions():
+def test_RS001_resplit_default_is_false_and_keeps_accessions_together():
     r = AutoPrefixGrouper().fit(
         RS_ACCESSIONS, prefix_depth=["#", "/"], position_index=-1
     ).get_groups()
+    assert list(r) == [RS_BASE]
+    assert len(r[RS_BASE]) == len(RS_ACCESSIONS)
+
+
+def test_RS011_resplit_true_splits_accessions_by_leading_letter():
+    r = AutoPrefixGrouper().fit(
+        RS_ACCESSIONS, prefix_depth=["#", "/"], position_index=-1, resplit=True
+    ).get_groups()
     assert len(r) > 1
+    flat = [s for v in r.values() for s in v]
+    assert sorted(flat) == sorted(RS_ACCESSIONS)
+
+
+def test_RS012_default_keeps_go_and_ro_under_obo():
+    r = AutoPrefixGrouper().fit(
+        RS_OBO, prefix_depth="/", position_index=-1
+    ).get_groups()
+    assert list(r) == ["http://purl.obolibrary.org/obo/"]
 
 
 def test_RS002_resplit_false_keeps_accessions_under_one_prefix():
