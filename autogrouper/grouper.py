@@ -13,6 +13,15 @@ No external dependencies. Pure Python 3.6+.
 
 Changes
 -------
+0.2.6
+    Faster again, with identical results. The search for delimiters inside
+    each string used a loop over every character in Python. It now uses the
+    built in ``find``, which runs in C. ``fit()`` on 800000 numbered URIs takes
+    1.1 s instead of 2.2 s, and on 800000 identifiers over five namespaces
+    1.5 s instead of 2.3 s. ``tests/test_delimiter_equivalence.py`` compares
+    the new helper with a copy of the old one, and compares ``fit()``,
+    ``preview_fit()`` and ``inspect_prefix()`` with the old helper put back.
+
 0.2.5
     Faster grouping with identical results. Each round used to rebuild the
     whole pending list, so numbered identifiers such as ``.../0000001`` took
@@ -944,7 +953,13 @@ class AutoPrefixGrouper:
         list[int]
             Indices, left to right.
         """
-        positions = [i for i, ch in enumerate(text) if ch == delimiter]
+        if len(delimiter) != 1:
+            return []
+        positions = []
+        found = text.find(delimiter)
+        while found != -1:
+            positions.append(found)
+            found = text.find(delimiter, found + 1)
         if skip_scheme_colon and delimiter == ":":
             positions = [i for i in positions if text[i + 1:i + 3] != "//"]
         return positions

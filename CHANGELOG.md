@@ -6,6 +6,16 @@ Each version lists what was fixed, what was added and what changed in behaviour.
 
 If you use 0.1.0 to 0.2.2, upgrade. Those versions can lose or repeat strings (see 0.2.3).
 
+## 0.2.6 (6 November 2026)
+
+Faster again. The groups are exactly the same.
+
+Changed
+* The search for delimiters inside each string used a loop over every character in Python. It now uses the built in `find`, which runs in C. `fit()` on 800000 numbered URIs takes 1.1 seconds instead of 2.2, and on 800000 identifiers over five namespaces 1.5 seconds instead of 2.3. The algorithm is unchanged.
+
+Checked
+* 530 new test cases compare the new helper with a copy of the old one on hand made texts, random texts, and odd delimiters (empty, or longer than one character). They also compare `fit()`, `preview_fit()` and `inspect_prefix()` with the old helper put back. Three deliberate bugs in the helper were all caught. A further 40000 random lists with random settings gave identical results, and so did the 30 designed cases of schemamap.
+
 ## 0.2.5 (6 November 2026)
 
 Faster grouping. The groups are exactly the same.
