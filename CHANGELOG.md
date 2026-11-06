@@ -2,7 +2,7 @@
 
 Author: Rajat Kumar Mondal
 
-Each version lists what was fixed, what was added and what changed in behaviour. PyPI went from 0.2.2 to 0.2.5. Versions 0.2.3 and 0.2.4 exist on GitHub only, and 0.2.5 contains everything in them.
+Each version lists what was fixed, what was added and what changed in behaviour. PyPI went from 0.2.2 to 0.2.5, and then to 0.2.7. Versions 0.2.3, 0.2.4 and 0.2.6 exist on GitHub only, and the next PyPI version contains everything in them.
 
 If you use 0.1.0 to 0.2.2, upgrade. Those versions can lose or repeat strings (see 0.2.3).
 
