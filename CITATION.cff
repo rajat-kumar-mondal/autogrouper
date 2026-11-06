@@ -11,6 +11,10 @@ authors:
 version: "0.2.5"
 date-released: "2026-11-06"
 license: MIT
+identifiers:
+  - type: swh
+    value: "swh:1:rel:ebb0b84396f73665ca476ea5552829f08526bf6b"
+    description: "Software Heritage archive of release v0.2.5"
 repository-code: "https://github.com/rajat-kumar-mondal/autogrouper"
 url: "https://pypi.org/project/autogrouper/"
 keywords:
