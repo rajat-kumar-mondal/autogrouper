@@ -47,6 +47,7 @@ Homepage = "https://github.com/rajat-kumar-mondal/autogrouper"
 Documentation = "https://github.com/rajat-kumar-mondal/autogrouper#readme"
 Repository = "https://github.com/rajat-kumar-mondal/autogrouper"
 "Bug Tracker" = "https://github.com/rajat-kumar-mondal/autogrouper/issues"
+Changelog = "https://github.com/rajat-kumar-mondal/autogrouper/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
