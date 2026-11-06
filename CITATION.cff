@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use autogrouper in your work, please cite it with these details."
+type: software
+title: "autogrouper"
+abstract: "Groups a list of strings by shared prefix. It needs no delimiter, no prefix length, no schema and no external package. It was built for URIs and identifiers from ontologies and RDF data."
+authors:
+  - family-names: "Mondal"
+    given-names: "Rajat Kumar"
+    email: "rajatmondal925@gmail.com"
+version: "0.2.5"
+date-released: "2026-11-06"
+license: MIT
+repository-code: "https://github.com/rajat-kumar-mondal/autogrouper"
+url: "https://pypi.org/project/autogrouper/"
+keywords:
+  - prefix
+  - grouping
+  - string
+  - rdf
+  - ontology
+  - semantic web
+  - bioinformatics
+  - namespace
