@@ -7,6 +7,7 @@ authors:
   - family-names: "Mondal"
     given-names: "Rajat Kumar"
     email: "rajatmondal925@gmail.com"
+    orcid: "https://orcid.org/0009-0001-3070-5269"
 version: "0.2.5"
 date-released: "2026-11-06"
 license: MIT
