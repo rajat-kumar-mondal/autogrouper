@@ -5,6 +5,7 @@ Automatic prefix-based grouping of string collections. No delimiter. No schema. 
 [![PyPI version](https://badge.fury.io/py/autogrouper.svg)](https://pypi.org/project/autogrouper/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://github.com/rajat-kumar-mondal/autogrouper/actions/workflows/tests.yml/badge.svg)](https://github.com/rajat-kumar-mondal/autogrouper/actions/workflows/tests.yml)
 
 What changed in each version is listed in the [changelog](https://github.com/rajat-kumar-mondal/autogrouper/blob/main/CHANGELOG.md).
 
