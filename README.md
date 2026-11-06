@@ -558,9 +558,9 @@ After sorting, strings from the same namespace land in adjacent positions. The l
 
 **Complexity**
 
-Time: O(N log N x L) for the sort, plus the matching rounds, where N is the number of strings and L is the average string length. Each round finds the strings that share its prefix by binary search in an alphabetical copy of the list, so it costs about the size of its own group. A later round whose prefix is shorter can look at a string again, and a string of length L has at most L such prefixes, so the worst case is O(N x L squared). Measured on numbered URIs, the time grows with a slope of 1.0 from 2,500 to 40,000 strings.
+Time: O(N log N x L) for the sort, plus the matching rounds, where N is the number of strings and L is the average string length. Each round finds the strings that share its prefix by binary search in an alphabetical copy of the list, and a table of live entries skips the strings that earlier rounds already grouped, so a round costs about the size of its own group. The bound holds in every case. Measured on numbered URIs, the time grows with a slope of 1.0 from 2,500 to 800,000 strings, at about 1.4 microseconds per string.
 
-Before version 0.2.5 every round scanned the whole pending list. The time was O(N squared x L), and the same test gave a slope of 1.97. The groups are exactly the same in both versions.
+Before version 0.2.5 every round scanned the whole pending list. The time was O(N squared x L), and the same test gave a slope of 1.97. Before version 0.2.7 a contrived input of equal length strings could still make rounds rescan earlier groups, which cost O(N x L squared). The groups are exactly the same in all versions.
 
 Space: O(N x L) for the result and O(N) for the indexes.
 

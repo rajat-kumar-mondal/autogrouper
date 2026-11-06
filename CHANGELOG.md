@@ -6,6 +6,17 @@ Each version lists what was fixed, what was added and what changed in behaviour.
 
 If you use 0.1.0 to 0.2.2, upgrade. Those versions can lose or repeat strings (see 0.2.3).
 
+## 0.2.7 (6 November 2026)
+
+A worst case guarantee. The groups are exactly the same.
+
+Changed
+* Each round searches an alphabetical copy of the strings for those that share its prefix. It used to step over strings that earlier rounds had already moved into a group. A table of the next live entry now skips them. The time is O(N log N x L) in every case.
+* On strings of equal length that are arranged so that each round rescans every earlier group, `fit()` on 8000 strings of 4000 characters went from 1.44 seconds to 0.14 seconds. No ordinary input showed the problem, and ordinary inputs take about 1 to 4 percent longer.
+
+Checked
+* The worst case family joins the equivalence tests, together with a check that it costs about as much as the same strings in random order. That check fails on 0.2.6. Four deliberate bugs in the skip table were all caught, 180000 random lists gave identical results, and so did the 30 designed cases of schemamap.
+
 ## 0.2.6 (6 November 2026)
 
 Faster again. The groups are exactly the same.

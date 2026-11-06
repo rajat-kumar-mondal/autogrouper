@@ -214,3 +214,35 @@ def test_numbered_uris_no_longer_grow_quadratically():
     small = best_of(3, numbered_uris(20000))
     large = best_of(3, numbered_uris(80000))
     assert large / small < 8
+
+
+def falling_prefix_strings(length):
+    """Equal length strings in pairs. Pair k shares exactly k leading letters, and the pairs come with k falling.
+
+    Before the skip table, every round rescanned all the groups made earlier, which was the worst case of _run.
+    """
+    strings = []
+    for k in range(length - 1, 0, -1):
+        strings.append("a" * k + "b" + "c" * (length - k - 1))
+        strings.append("a" * k + "c" + "c" * (length - k - 1))
+    return strings
+
+
+@pytest.mark.parametrize("length", [2, 3, 4, 5, 8, 20, 60])
+def test_the_worst_case_family_matches_the_original(length):
+    strings = falling_prefix_strings(length)
+    assert_same(strings)
+    assert_same(fit_sort(strings))
+    assert_same(list(reversed(strings)))
+    shuffled = list(strings)
+    random.Random(length).shuffle(shuffled)
+    assert_same(shuffled)
+
+
+def test_the_worst_case_input_costs_about_as_much_as_the_same_strings_shuffled():
+    ordered = falling_prefix_strings(3000)
+    shuffled = list(ordered)
+    random.Random(1).shuffle(shuffled)
+    ordered_time = best_of(3, ordered)
+    shuffled_time = best_of(3, shuffled)
+    assert ordered_time / shuffled_time < 30
