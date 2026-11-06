@@ -555,11 +555,13 @@ After sorting, strings from the same namespace land in adjacent positions. The l
 
 **Complexity**
 
-Time: O(N squared x L), where N is the number of strings and L is average string length. Each string is compared against its neighbour, and the prefix check is linear in L.
+Time: O(N log N x L) for the sort, plus the matching rounds, where N is the number of strings and L is the average string length. Each round finds the strings that share its prefix by binary search in an alphabetical copy of the list, so it costs about the size of its own group. A later round whose prefix is shorter can look at a string again, and a string of length L has at most L such prefixes, so the worst case is O(N x L squared). Measured on numbered URIs, the time grows with a slope of 1.0 from 2,500 to 40,000 strings.
 
-Space: O(N x L) for storing the result.
+Before version 0.2.5 every round scanned the whole pending list. The time was O(N squared x L), and the same test gave a slope of 1.97. The groups are exactly the same in both versions.
 
-No trie, hash table, or suffix array is required. Zero imports. Runs on CPython 3.6+.
+Space: O(N x L) for the result and O(N) for the indexes.
+
+No third party package is needed. Standard library only. Runs on CPython 3.6+.
 
 ---
 
