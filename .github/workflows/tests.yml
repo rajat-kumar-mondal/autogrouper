@@ -11,7 +11,8 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # ubuntu-latest no longer has Python 3.9. Ubuntu 24.04 keeps the oldest tested version available.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
