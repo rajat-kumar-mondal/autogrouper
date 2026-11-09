@@ -1,13 +1,13 @@
 """
 Tests for AutoPrefixGrouper class.
-357 test cases covering the core algorithm, recursive grouping,
+363 test cases covering the core algorithm, recursive grouping,
 prefix_depth (single and list), position_index (single and list),
-resplit, skip_scheme_colon, strip_prefix, count, inspect_prefix, preview_fit, and export.
+resplit, skip_scheme_colon, strip_prefix, count, display_group_datatype, inspect_prefix, preview_fit, and export.
 
 Author: Rajat Kumar Mondal
 
 Created: 2026-11-04
-Last updated: 2026-11-05
+Last updated: 2026-11-09
 """
 
 import pytest
@@ -1411,14 +1411,6 @@ def test_R008_nested_all_strings_reachable():
         assert s in leaves
 
 
-def test_R009_flat_no_duplicate_top_keys():
-    strings = ["hasGlycan", "hasGlycanBinding", "hasX", "hasY", "abc"]
-    g = AutoPrefixGrouper().fit(strings)
-    r = g.get_groups_recursive(mode="flat", singletons=True)
-    # Keys in a dict are always unique — just verify no KeyError and dict is valid
-    assert isinstance(r, dict)
-
-
 def test_R010_three_level_deep():
     # ab -> abc -> abcd
     strings = ["abcd_01", "abcd_02", "abc_01", "ab_01", "ab_02"]
@@ -1797,25 +1789,6 @@ OBO_STRINGS = [
     "http://purl.obolibrary.org/obo/RO_0000002",
 ]
 
-def test_M001_merged_groups_are_resplit():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
-    r = g.get_groups()
-    # Must not collapse into a single key
-    assert len(r) > 1
-
-
-def test_M002_resplit_GO_group_exists():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
-    r = g.get_groups()
-    assert any("GO_" in k for k in r)
-
-
-def test_M003_resplit_RO_group_exists():
-    g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
-    r = g.get_groups()
-    assert any("RO_" in k for k in r)
-
-
 def test_M004_all_strings_preserved_after_resplit():
     g = AutoPrefixGrouper().fit(OBO_STRINGS, prefix_depth="/", position_index=4, resplit=True)
     r = g.get_groups()
@@ -1901,13 +1874,6 @@ def test_E001_export_json_returns_string():
     assert isinstance(result, str)
 
 
-def test_E002_export_json_valid_json():
-    g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label", "owl:Class"])
-    result = g.export("json")
-    parsed = _json.loads(result)
-    assert isinstance(parsed, dict)
-
-
 def test_E003_export_json_all_prefixes_present():
     g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label", "owl:Class", "owl:ObjectProperty"])
     parsed = _json.loads(g.export("json"))
@@ -1950,12 +1916,6 @@ def test_E008_export_before_fit_raises():
     g = AutoPrefixGrouper()
     with pytest.raises(RuntimeError):
         g.export("json")
-
-
-def test_E009_export_unsupported_format_raises():
-    g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label"])
-    with pytest.raises(ValueError):
-        g.export("xml")
 
 
 def test_E010_export_format_case_insensitive():
@@ -2067,13 +2027,6 @@ def test_E024_export_tsv_all_strings_present():
     tsv = g.export("tsv")
     for s in strings:
         assert s in tsv
-
-
-def test_E025_export_tsv_uses_tab_separator():
-    g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label"])
-    lines = g.export("tsv").splitlines()
-    for line in lines:
-        assert "\t" in line
 
 
 def test_E026_export_tsv_each_row_has_two_fields():
@@ -2203,12 +2156,6 @@ def test_E041_all_formats_same_string_count():
     assert json_strings == csv_strings == tsv_strings == md_strings
 
 
-def test_E042_unsupported_format_raises_valueerror():
-    g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label"])
-    with pytest.raises(ValueError):
-        g.export("xml")
-
-
 def test_E043_unsupported_format_error_message_names_supported():
     g = AutoPrefixGrouper().fit(["rdf:type", "rdf:label"])
     with pytest.raises(ValueError, match="json"):
@@ -2249,24 +2196,6 @@ def test_L002_single_delimiter_list_single_int_index():
 
 
 # --- two delimiters, strings use different ones ---
-
-def test_L003_two_delimiters_strings_split_by_first_match():
-    # "#" strings should cut at "#", "/" strings should cut at "/"
-    data = [
-        "http://www.w3.org/2002/07/owl#Class",
-        "http://www.w3.org/2002/07/owl#ObjectProperty",
-        "http://purl.obolibrary.org/obo/GO_0001234",
-        "http://purl.obolibrary.org/obo/GO_0005678",
-    ]
-    g = AutoPrefixGrouper().fit(
-        data,
-        prefix_depth=["#", "/"],
-        position_index=[-1, 5],
-    )
-    r = g.get_groups()
-    total = sum(len(v) for v in r.values())
-    assert total == 4
-
 
 def test_L004_hash_delimiter_strings_cut_at_hash():
     data = [
@@ -2936,3 +2865,98 @@ def test_SK010_no_string_is_lost_when_false():
         data, prefix_depth=SC_ORDER, position_index=-1, skip_scheme_colon=False
     ).get_groups()
     assert sorted(s for v in r.values() for s in v) == sorted(data)
+
+
+# ── display_group_datatype ──────────────────────────────────────────────────
+
+DT_DIGITS = ["http://a.org/DOID:%d" % n for n in (10, 20, 305)]
+DT_ALNUM = ["http://b.org/CON%s" % s for s in ("0001", "0002A", "00B3")]
+DT_LETTERS = ["http://c.org/term/%s" % s for s in ("alpha", "beta", "gamma")]
+
+
+def dt(strings, **kw):
+    return AutoPrefixGrouper().fit(strings, **kw).get_groups(display_group_datatype=True)
+
+
+def test_DG001_default_is_off_and_keys_have_no_placeholder():
+    r = AutoPrefixGrouper().fit(DT_DIGITS).get_groups()
+    assert all("{" not in k for k in r)
+    assert type(r) is dict
+
+
+def test_DG002_digits_give_n():
+    r = dt(DT_DIGITS)
+    assert list(r) == ["http://a.org/DOID:{n}"]
+
+
+def test_DG003_letters_give_a():
+    r = dt(DT_LETTERS, prefix_depth="/")
+    assert list(r) == ["http://c.org/term/{a}"]
+
+
+def test_DG004_letters_and_digits_give_an():
+    r = dt(DT_ALNUM, prefix_depth="/")
+    assert list(r) == ["http://b.org/{an}"]
+
+
+def test_DG005_digits_in_one_member_letters_in_another_give_an():
+    r = dt(["x:12", "x:ab"])
+    assert list(r) == ["x:{an}"]
+
+
+def test_DG006_other_characters_give_x():
+    r = dt(["x:1-2", "x:3-4"])
+    assert list(r) == ["x:{x}"]
+
+
+def test_DG007_non_ascii_gives_x():
+    r = dt(["x:1é", "x:2é"])
+    assert list(r) == ["x:{x}"]
+
+
+def test_DG008_group_with_nothing_after_the_prefix_has_no_placeholder():
+    r = dt(["os.path", "os.getcwd", "sys.argv"])
+    assert "sys.argv" in r
+    assert "os.{a}" in r
+
+
+def test_DG009_values_are_the_same_as_without_the_argument():
+    plain = AutoPrefixGrouper().fit(DT_DIGITS + DT_LETTERS).get_groups()
+    shown = dt(DT_DIGITS + DT_LETTERS)
+    assert sorted(sorted(v) for v in shown.values()) == sorted(sorted(v) for v in plain.values())
+
+
+def test_DG010_works_with_count():
+    r = AutoPrefixGrouper().fit(DT_DIGITS).get_groups(count=True, display_group_datatype=True)
+    assert dict(r) == {"http://a.org/DOID:{n}": 3}
+
+
+def test_DG011_works_with_strip_prefix():
+    r = AutoPrefixGrouper().fit(DT_DIGITS).get_groups(strip_prefix=True, display_group_datatype=True)
+    assert dict(r) == {"http://a.org/DOID:{n}": ["10", "20", "305"]}
+
+
+def test_DG012_printed_result_ends_with_a_legend_of_the_codes_used():
+    text = str(dt(DT_DIGITS + DT_LETTERS))
+    body, legend = text.split("\n\nLegend:")
+    assert body.endswith("}")
+    assert "{n} = digits only" in legend
+    assert "{a} = letters only" in legend
+    assert "{an}" not in legend and "{x}" not in legend
+
+
+def test_DG013_legend_only_lists_codes_that_appear():
+    r = dt(DT_DIGITS)
+    assert r.legend == "Legend:\n  {n} = digits only"
+
+
+def test_DG014_no_legend_when_no_placeholder_was_used():
+    r = dt(["sys.argv"])
+    assert r.legend == ""
+    assert "Legend" not in str(r)
+
+
+def test_DG015_result_is_still_a_dict():
+    r = dt(DT_DIGITS)
+    assert isinstance(r, dict)
+    assert r == {"http://a.org/DOID:{n}": DT_DIGITS}

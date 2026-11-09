@@ -2,7 +2,7 @@
 Author: Rajat Kumar Mondal
 
 Created: 2026-11-04
-Last updated: 2026-11-06
+Last updated: 2026-11-09
 
 autogrouper.grouper
 ~~~~~~~~~~~~~~~~~~~
@@ -13,6 +13,12 @@ No external dependencies. Pure Python 3.6+.
 
 Changes
 -------
+0.2.8
+    New option ``display_group_datatype`` on ``get_groups()``. When True,
+    each key ends with a placeholder for what follows the prefix ({n}
+    digits only, {a} letters only, {an} letters and digits, {x} anything
+    else) and the printed result ends with a legend. Default False, so
+    existing output is unchanged.
 0.2.7
     A worst case guarantee, with identical results. Each round searches the
     alphabetical copy for the strings that share its prefix, and it used to
@@ -113,6 +119,18 @@ Space: O(N x L) for the grouped output and O(N) for the indexes
 from __future__ import annotations
 
 from bisect import bisect_left
+
+
+class _GroupsWithLegend(dict):
+    """A plain dict whose printed form ends with a legend of the datatype placeholders."""
+
+    legend = ""
+
+    def __repr__(self) -> str:
+        text = dict.__repr__(self)
+        return text + "\n\n" + self.legend if self.legend else text
+
+    __str__ = __repr__
 
 
 class AutoPrefixGrouper:
@@ -448,7 +466,8 @@ class AutoPrefixGrouper:
 
     def get_groups(self,
                    strip_prefix: bool = False,
-                   count: bool = False) -> "dict[str, list[str]] | dict[str, int]":
+                   count: bool = False,
+                   display_group_datatype: bool = False) -> "dict[str, list[str]] | dict[str, int]":
         """Return the discovered prefix groups.
 
         Parameters
@@ -461,6 +480,16 @@ class AutoPrefixGrouper:
             When ``True``, returns the number of members per group instead
             of the member list. Default ``False``.
             Cannot be combined with ``strip_prefix=True``.
+        display_group_datatype : bool, optional
+            When ``True``, each group key ends with a placeholder that says
+            what kind of characters follow the prefix in that group, for
+            example ``'http://a.org/DOID:{n}'``. ``{n}`` is digits only,
+            ``{a}`` is letters only, ``{an}`` is letters and digits, and
+            ``{x}`` is anything else (ASCII only, so a non ASCII character
+            counts as ``{x}``). A group whose members are all equal to the
+            key has nothing after the prefix and gets no placeholder. The
+            result prints a legend of the placeholders it uses after the
+            groups. Default ``False``.
 
         Returns
         -------
@@ -494,14 +523,63 @@ class AutoPrefixGrouper:
                 "strip_prefix and count cannot both be True. Choose one."
             )
         if count:
-            return {prefix: len(members) for prefix, members in self._groups.items()}
-        if strip_prefix:
-            result: dict[str, list[str]] = {}
+            result = {prefix: len(members) for prefix, members in self._groups.items()}
+        elif strip_prefix:
+            result = {}
             for prefix, members in self._groups.items():
                 plen = len(prefix)
                 result[prefix] = [s[plen:] if s.startswith(prefix) else s for s in members]
-            return result
-        return dict(self._groups)
+        else:
+            result = dict(self._groups)
+        if display_group_datatype:
+            return self._label_group_datatypes(result)
+        return result
+
+    _DATATYPE_LEGEND = (
+        ("n", "digits only"),
+        ("a", "letters only"),
+        ("an", "letters and digits"),
+        ("x", "any other characters"),
+    )
+
+    @staticmethod
+    def _datatype_code(members: list[str], prefix: str) -> str | None:
+        """Return ``n``, ``a``, ``an`` or ``x`` for what follows ``prefix``.
+
+        Returns ``None`` when no member has anything after the prefix.
+        """
+        plen = len(prefix)
+        text = "".join(s[plen:] if s.startswith(prefix) else s for s in members)
+        if not text:
+            return None
+        try:
+            text.encode("ascii")
+        except UnicodeEncodeError:
+            return "x"
+        if text.isdigit():
+            return "n"
+        if text.isalpha():
+            return "a"
+        if text.isalnum():
+            return "an"
+        return "x"
+
+    def _label_group_datatypes(self, result: dict) -> dict:
+        labelled = _GroupsWithLegend()
+        used = set()
+        for prefix, value in result.items():
+            code = self._datatype_code(self._groups[prefix], prefix)
+            if code is None:
+                labelled[prefix] = value
+            else:
+                labelled[prefix + "{" + code + "}"] = value
+                used.add(code)
+        lines = ["Legend:"]
+        for code, meaning in self._DATATYPE_LEGEND:
+            if code in used:
+                lines.append("  {%s} = %s" % (code, meaning))
+        labelled.legend = "\n".join(lines) if used else ""
+        return labelled
 
     def get_groups_recursive(self,
                               mode: str = "flat",

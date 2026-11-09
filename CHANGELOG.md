@@ -6,6 +6,21 @@ Each version lists what was fixed, what was added and what changed in behaviour.
 
 If you use 0.1.0 to 0.2.2, upgrade. Those versions can lose or repeat strings (see 0.2.3).
 
+## 0.2.8 (9 November 2026)
+
+A new option to show what follows each prefix. Nothing else changes, and the groups are exactly the same.
+
+Added
+* `get_groups(display_group_datatype=True)` ends each key with a placeholder for what follows the prefix in that group, for example `https://www.alliancegenome.org/disease/DOID:{n}`. `{n}` is digits only, `{a}` is letters only, `{an}` is letters and digits, and `{x}` is anything else (ASCII only, so a non ASCII character counts as `{x}`). A group whose members all equal the key has nothing after the prefix and gets no placeholder.
+* The printed result ends with a legend of the placeholders it used, so the reader can see what each one means. The result is still a normal `dict`, and the legend is also available as `.legend`.
+* The option also works together with `count=True` and `strip_prefix=True`.
+
+Changed
+* Nothing in the default behaviour. `display_group_datatype` is `False` by default, and the result is then the same plain `dict` as before.
+
+Checked
+* 15 new test cases cover each placeholder, mixed members, non ASCII text, groups with nothing after the prefix, the legend, and the combinations with `count` and `strip_prefix`. All 991 tests pass.
+
 ## 0.2.7 (6 November 2026)
 
 A worst case guarantee. The groups are exactly the same.

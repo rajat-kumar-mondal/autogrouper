@@ -8,7 +8,7 @@ Zero dependencies. Pure Python 3.6+.
 Author: Rajat Kumar Mondal
 
 Created: 2026-11-04
-Last updated: 2026-11-05
+Last updated: 2026-11-09
 
 Basic usage::
 
@@ -23,7 +23,7 @@ Basic usage::
 
 from .grouper import AutoPrefixGrouper
 
-__version__ = "0.2.7"
+__version__ = "0.2.8"
 __license__ = "MIT"
 
 __all__ = ["AutoPrefixGrouper"]

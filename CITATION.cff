@@ -8,8 +8,8 @@ authors:
     given-names: "Rajat Kumar"
     email: "rajatmondal925@gmail.com"
     orcid: "https://orcid.org/0009-0001-3070-5269"
-version: "0.2.7"
-date-released: "2026-11-06"
+version: "0.2.8"
+date-released: "2026-11-09"
 license: MIT
 repository-code: "https://github.com/rajat-kumar-mondal/autogrouper"
 url: "https://pypi.org/project/autogrouper/"

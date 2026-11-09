@@ -100,6 +100,26 @@ AutoPrefixGrouper().fit(["rdf:type", "rdf:label", "owl:Class"]).get_groups()
 
 `owl:Class` has no neighbour that starts with `owl:`, so it becomes its own key.
 
+### Showing what follows the prefix
+
+Pass `display_group_datatype=True` to `get_groups()` and each key ends with a placeholder for what follows the prefix in that group. The printed result ends with a legend of the placeholders it used.
+
+```python
+g = AutoPrefixGrouper().fit(
+    ["https://a.org/disease/DOID:10", "https://a.org/disease/DOID:20",
+     "http://b.org/ggdonto#CON0001", "http://b.org/ggdonto#CON0002"],
+    prefix_depth=["#", ":", "/"],
+)
+print(g.get_groups(display_group_datatype=True))
+# {'http://b.org/ggdonto#{an}': [...], 'https://a.org/disease/DOID:{n}': [...]}
+#
+# Legend:
+#   {n} = digits only
+#   {an} = letters and digits
+```
+
+`{n}` is digits only, `{a}` is letters only, `{an}` is letters and digits, and `{x}` is anything else (ASCII only). A group with nothing after its prefix gets no placeholder. The default is `False`. It also works with `count=True` and `strip_prefix=True`.
+
 ---
 
 ## Controlling prefix depth
@@ -486,7 +506,7 @@ If you received the list from a third-party API, a collaborator, or a legacy sys
 | Method | Requires fit | Description |
 |---|---|---|
 | `fit(strings, prefix_depth, position_index)` | No | Discover groups. `prefix_depth` and `position_index` each accept a single value or a list. Returns `self`. |
-| `get_groups(strip_prefix, count)` | Yes | `dict[str, list[str]]` of all groups. `strip_prefix=True` removes the group key from the start of each member. `count=True` returns `dict[str, int]` with the member count per group. The two cannot be combined. |
+| `get_groups(strip_prefix, count, display_group_datatype)` | Yes | `dict[str, list[str]]` of all groups. `strip_prefix=True` removes the group key from the start of each member. `count=True` returns `dict[str, int]` with the member count per group. The two cannot be combined. `display_group_datatype=True` ends each key with a placeholder for what follows the prefix: `{n}` digits only, `{a}` letters only, `{an}` letters and digits, `{x}` anything else, and the printed result ends with a legend of the placeholders it used. Default `False`. |
 | `get_groups_recursive(mode, singletons)` | Yes | Groups at every depth level. |
 | `get_prefix_for(string)` | Yes | Prefix key for a string, or `None`. |
 | `get_prefixes()` | Yes | Sorted list of all prefix keys. |
@@ -606,7 +626,7 @@ Run with full output including print statements:
 pytest tests/ -v -s
 ```
 
-357 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, skip_scheme_colon, strip_prefix, count, inspect, preview, and all four export formats.
+363 test cases cover the core algorithm, recursive grouping, prefix depth control (single and list), resplit, skip_scheme_colon, strip_prefix, count, display_group_datatype, inspect, preview, and all four export formats.
 
 ---
 
@@ -621,7 +641,7 @@ autogrouper/
 │   ├── algorithm.png      # Algorithm diagram (embedded in README)
 │   └── algorithm.svg      # Algorithm diagram source
 ├── tests/
-│   └── test_grouper.py    # 357 test cases
+│   └── test_grouper.py    # 363 test cases
 ├── LICENSE                # MIT license
 ├── README.md              # Full documentation
 └── pyproject.toml         # Build configuration and metadata
